@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Dispatch 200 offres
 
-## Getting Started
+Démo d'un outil de répartition dynamique des tâches : 200 offres marchands à publier en 22 jours ouvrés
+par 3 contributeurs (Alice, Bob, Charlie) et 1 orchestrateur, sur des données fictives et une horloge simulée partagée.
 
-First, run the development server:
+> État : **étape 1 (squelette)** du plan de construction. Le README complet (script de démo en 5 minutes)
+> arrive à l'étape 8.
+
+## Stack
+
+- Next.js 16 (App Router) + TypeScript, Tailwind CSS 4, composants de style shadcn/ui
+- Supabase (Postgres + Realtime), offre gratuite
+- Vercel (offre Hobby), connecté au dépôt GitHub
+- Vitest pour le moteur métier (`src/lib/engine/`, module pur sans base ni UI)
+
+## Installation locale
+
+Prérequis : Node.js 20.9 ou plus récent.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # puis renseigner les valeurs
+npm run dev                  # http://localhost:3000
+npm test                     # tests du moteur
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Sans variables Supabase, l'application démarre quand même et affiche un bandeau
+« Base de données non configurée ».
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Réseau d'entreprise avec proxy HTTPS
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Si le bandeau « Base de données injoignable » s'affiche alors que Supabase est actif, le proxy de
+l'entreprise remplace probablement les certificats HTTPS, et Node.js ne lit pas le magasin de certificats
+Windows. Il faut exporter les autorités racine de l'entreprise dans un fichier PEM, puis le passer à Node
+au démarrage. Cela ne concerne que le poste local, pas Vercel.
 
-## Learn More
+```powershell
+$env:NODE_EXTRA_CA_CERTS = "C:\Users\<toi>\.certs\corporate-roots.pem"
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Variables d'environnement
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Variable | Où la trouver | Exposée au navigateur |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase › Project Settings › API › Project URL | oui |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase › Project Settings › API Keys › clé `anon` (ou `publishable`) | oui (lecture seule via RLS) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase › Project Settings › API Keys › clé `service_role` (ou `secret`) | **non, serveur uniquement** |
+| `DEMO_ACCESS_CODE` | Au choix. Vide = accès libre | non |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Ne jamais préfixer la clé service par `NEXT_PUBLIC_`.
 
-## Deploy on Vercel
+## Déploiement (Supabase + Vercel)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. **Supabase** : créer un projet gratuit sur supabase.com, puis copier l'URL et les deux clés (voir tableau).
+   Le schéma SQL sera ajouté à l'étape 2.
+2. **GitHub** : créer un dépôt vide et y pousser ce dossier.
+3. **Vercel** : « Add New › Project », importer le dépôt, laisser le preset Next.js, renseigner les 4 variables
+   d'environnement, puis « Deploy ». Chaque push sur la branche principale redéploie.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Avant une démo : réactiver Supabase
+
+Un projet Supabase gratuit se met en pause après une période d'inactivité. Si l'application affiche
+« Base de données injoignable », ouvrir le tableau de bord Supabase, sélectionner le projet et cliquer
+sur « Restore project » (quelques minutes), puis recharger l'application.
+
+## Structure
+
+```
+src/
+  app/                 écrans (E0 accueil, (app)/… écrans E1 à E6) et routes API
+  components/          barre supérieure, coque d'application, composants UI
+  hooks/               profil (localStorage), horloge simulée, santé de la base
+  lib/engine/          logique métier pure : constantes, axe de temps simulé, personnes par défaut
+  lib/supabase/        clients Supabase (navigateur en lecture, serveur avec clé service)
+  proxy.ts             code d'accès optionnel (DEMO_ACCESS_CODE)
+```
