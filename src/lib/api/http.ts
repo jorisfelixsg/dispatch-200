@@ -27,7 +27,7 @@ export function failure(e: unknown): Response {
   if (e instanceof NotSeededError) return jsonError(e.message, 409, { code: "not_seeded" });
   const message = e instanceof Error ? e.message : String(e);
   if (/Could not find the function|PGRST202|42883/.test(message)) {
-    return jsonError("Fonction SQL absente : exécute supabase/migrations/0002_live_tasks.sql dans Supabase.", 500, {
+    return jsonError("Fonction SQL absente : exécute les scripts de supabase/migrations (0002, 0003) dans Supabase.", 500, {
       code: "missing_sql",
     });
   }

@@ -100,11 +100,14 @@ function orderedCandidates(ctx: Context, person: Person, nowSim: number): Listed
   let steps = orderedSteps(person);
 
   if (person.id === PAIRED_S2_S1_PERSON && steps.includes("S2")) {
-    // R5 special case: for each merchant without S2 (by rank): S2, then S1 of the same merchant
-    // if S1 is neither done nor reserved. Once every S2 is done: the remaining S1 by rank.
-    const withoutS2 = ctx.offers.filter((o) => !ctx.steps.get(o.id)?.S2);
-    if (withoutS2.length > 0) {
-      for (const o of withoutS2) {
+    // R5 special case: Alice walks merchants by rank: S2, then S1 of the same merchant if S1 is
+    // neither done nor reserved. Once every S2 is done: the remaining S1 by rank.
+    // PM decision (2026-11-09): a merchant stays in the walk until both S2 and S1 are done, so the
+    // S1 is still offered right after its S2 was validated (the literal "without S2" reading dropped
+    // it and made the 50-seed reference test fail).
+    const walk = ctx.offers.filter((o) => !ctx.steps.get(o.id)?.S2 || !ctx.steps.get(o.id)?.S1);
+    if (ctx.offers.some((o) => !ctx.steps.get(o.id)?.S2)) {
+      for (const o of walk) {
         if (canList(ctx, person, o, "S2", nowSim)) result.push(toTask(person, o, "S2"));
         if (canList(ctx, person, o, "S1", nowSim)) result.push(toTask(person, o, "S1"));
       }

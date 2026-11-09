@@ -19,7 +19,7 @@ export function ResetPanel() {
       const body = (await res.json()) as { ok?: boolean; durationMs?: number; error?: string };
       if (!res.ok || !body.ok) throw new Error(body.error ?? `Erreur ${res.status}`);
       await refreshSimState();
-      setMessage(`Démo réinitialisée en ${((body.durationMs ?? 0) / 1000).toFixed(1)} s.`);
+      setMessage(`Démo réinitialisée en ${((body.durationMs ?? 0) / 1000).toFixed(1).replace(".", ",")} s.`);
       setPhase("done");
     } catch (e) {
       setMessage(e instanceof Error ? e.message : String(e));
@@ -33,7 +33,8 @@ export function ResetPanel() {
         <h2 className="font-semibold">Réinitialiser la démo</h2>
         <p className="text-sm text-muted-foreground">
           Remet les 200 offres sans aucune étape faite, l&apos;horloge à J1 08:00, les compétences et priorités par
-          défaut, et vide absences, actions, réservations et journal. Chaque navigateur garde son profil.
+          défaut, vide absences, actions, réservations et journal, et recalcule la trajectoire de référence.
+          Chaque navigateur garde son profil.
         </p>
       </div>
 

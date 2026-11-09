@@ -35,9 +35,10 @@ export async function POST(request: Request) {
   if (supabase instanceof Response) return supabase;
 
   try {
-    const { data: sim, error: readError } = await supabase.from("sim_state").select("now_sim").eq("id", 1).maybeSingle();
+    const { data: sim, error: readError } = await supabase.from("sim_state").select("now_sim, auto_running").eq("id", 1).maybeSingle();
     if (readError) throw new Error(readError.message);
     if (!sim) return jsonError(ERRORS.not_seeded, 200);
+    if (sim.auto_running) return jsonError(ERRORS.auto_running, 200);
     const now = sim.now_sim as number;
 
     const next =

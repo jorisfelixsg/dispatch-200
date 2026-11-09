@@ -36,3 +36,17 @@ export type DoneResponse =
 export type ClockAction = "plus1h" | "plus2h" | "nextDay" | "goToDay";
 
 export type ClockResponse = { ok: true; nowSim: number; changed: boolean } | { ok: false; error: string };
+
+export type AutoResponse =
+  | {
+      ok: true;
+      seed: number;
+      daysPlayed: number[];
+      steps: number;
+      published: number;
+      /** Simulated minute of the last S5, or null if nothing is published yet. */
+      lastPublication: number | null;
+      nowSim: number;
+      durationMs: number;
+    }
+  | { ok: false; error: string; code?: string };

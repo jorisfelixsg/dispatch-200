@@ -1,13 +1,11 @@
 import { offerToRow, personDefaultsToRow } from "@/lib/data/rows";
+import { REFERENCE_SEED, referenceCurve } from "@/lib/engine/autoplay";
 import { DEFAULT_PEOPLE } from "@/lib/engine/people";
 import { SIM_START } from "@/lib/engine/time";
 import { generateOffers } from "@/lib/seed/offers";
 import { getServiceSupabase } from "@/lib/supabase/server";
 
-/** Default simulation seed (R14, R15). */
-const DEFAULT_SIM_SEED = 42;
-
-/** R16 — Reset the demo in a single database transaction. */
+/** R16 — Reset the demo in a single database transaction, with the reference trajectory (R15). */
 export async function POST() {
   const supabase = getServiceSupabase();
   if (!supabase) {
@@ -15,11 +13,13 @@ export async function POST() {
   }
 
   const started = Date.now();
+  const offers = generateOffers();
   const { error } = await supabase.rpc("reset_demo", {
-    p_offers: generateOffers().map(offerToRow),
+    p_offers: offers.map(offerToRow),
     p_people: DEFAULT_PEOPLE.map((p, i) => personDefaultsToRow(p, i)),
     p_now_sim: SIM_START,
-    p_seed: DEFAULT_SIM_SEED,
+    p_seed: REFERENCE_SEED,
+    p_reference_curve: referenceCurve(offers, REFERENCE_SEED),
   });
 
   if (error) {
@@ -27,7 +27,7 @@ export async function POST() {
     return Response.json(
       {
         error: missing
-          ? "La fonction reset_demo est absente : exécute supabase/migrations/0001_init.sql dans Supabase."
+          ? "La fonction reset_demo est absente ou ancienne : exécute les scripts de supabase/migrations (0001 à 0003) dans Supabase."
           : `Échec du reset : ${error.message}`,
       },
       { status: 500 },

@@ -22,6 +22,11 @@ describe("R5 — order of the « Mes tâches » list", () => {
     expect(labels(list.tasks)).toEqual(Array.from({ length: 20 }, (_, i) => `S2 r${i + 1}`));
   });
 
+  it("PM decision: after Alice validates S2 r1, the S1 of the same merchant stays first in her list", () => {
+    const state = initialState({ nowSim: simAt(1, 540), executions: [exec(1, "S2", simAt(1, 483))] });
+    expect(labels(computeTaskList(state, "alice").tasks).slice(0, 3)).toEqual(["S1 r1", "S2 r2", "S1 r2"]);
+  });
+
   it("R5 example « Bob à J2 »: 12 S4 ready, no S5 → 12 S4 (36 min) + 8 S1 (24 min)", () => {
     const state = initialState({ nowSim: simAt(2, 600), executions: execRange(1, 12, ["S2"]) });
     const list = computeTaskList(state, "bob");
