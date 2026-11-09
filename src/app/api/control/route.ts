@@ -40,6 +40,9 @@ export async function GET() {
           renfortActive: world.state.renfortS1.active,
           forcedPeople: world.state.people.filter((p) => p.forcedMode).map((p) => p.id),
           today: currentDay(world.state),
+          declaredAbsences: world.state.adjustments
+            .filter((a) => a.absentDeclared)
+            .map((a) => ({ personId: a.personId, dayIndex: a.dayIndex })),
         },
       } satisfies ControlResponse,
       { headers: { "cache-control": "no-store" } },

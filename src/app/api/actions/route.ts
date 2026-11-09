@@ -15,6 +15,7 @@ const REFUSALS: Record<ActionRefusal | "auto_running" | "already_cancelled" | "n
   already_active: "Le renfort S1 est déjà actif.",
   already_ranked: "Les marchands sont déjà classés par importance.",
   past_day: "Ce jour est déjà passé.",
+  absent_that_day: "Cette personne est déclarée absente ce jour-là : choisis un autre jour.",
   auto_running: "Simulation en cours : réessaie dans un instant.",
   already_cancelled: "Cette action est déjà annulée.",
   not_seeded: "La démo n'est pas initialisée.",

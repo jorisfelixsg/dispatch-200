@@ -82,7 +82,8 @@ describe("R11 — proposals and one-click guards", () => {
     expect(proposeActions(state, report.controls, report.level)).toEqual([
       { type: "FORCE_ORDER", personId: "charlie", dayIndex: null },
       { type: "RENFORT_S1", personId: null, dayIndex: null },
-      { type: "EXTRA_HOUR", personId: "charlie", dayIndex: 5 },
+      // Charlie is declared absent on J5 and J6: the day pre-filled is J7.
+      { type: "EXTRA_HOUR", personId: "charlie", dayIndex: 7 },
       { type: "RERANK", personId: null, dayIndex: null },
     ]);
   });
@@ -94,6 +95,10 @@ describe("R11 — proposals and one-click guards", () => {
     expect(checkAction(renfort, { type: "RENFORT_S1" })).toBe("already_active");
     expect(checkAction(initialState({ nowSim: simAt(5, 480) }), { type: "EXTRA_HOUR", personId: "bob", dayIndex: 4 })).toBe("past_day");
     expect(checkAction(initialState(), { type: "FORCE_ORDER", personId: "orchestrator" })).toBe("not_contributor");
+    const absent = declareAbsence(initialState({ nowSim: simAt(5, 480) }), "charlie", 6);
+    if (!absent.ok) throw new Error(absent.error);
+    expect(checkAction(absent.state, { type: "EXTRA_HOUR", personId: "charlie", dayIndex: 6 })).toBe("absent_that_day");
+    expect(checkAction(absent.state, { type: "EXTRA_HOUR", personId: "charlie", dayIndex: 7 })).toBeNull();
     const state = initialWorldState(defaultOffers());
     expect(checkAction(state, { type: "RERANK" })).toBeNull();
     expect(checkAction(applyAction(state, { type: "RERANK" }), { type: "RERANK" })).toBe("already_ranked");

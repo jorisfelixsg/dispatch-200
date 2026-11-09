@@ -32,8 +32,11 @@ function ProposalCard({ index, proposal, payload }: { index: number; proposal: A
 
   const today = payload.today ?? 1;
   const needsPerson = proposal.type === "FORCE_ORDER" || proposal.type === "EXTRA_HOUR";
-  const days = Array.from({ length: BUSINESS_DAYS - today + 1 }, (_, i) => today + i);
-  const selectedDay = day !== null && day >= today ? day : today;
+  // PM decision: no extra hour on a day the chosen person is declared absent.
+  const days = Array.from({ length: BUSINESS_DAYS - today + 1 }, (_, i) => today + i).filter(
+    (d) => !payload.declaredAbsences.some((a) => a.personId === personId && a.dayIndex === d),
+  );
+  const selectedDay = day !== null && days.includes(day) ? day : (days[0] ?? null);
 
   const alreadyActive =
     (proposal.type === "RENFORT_S1" && payload.renfortActive) ||
@@ -81,7 +84,12 @@ function ProposalCard({ index, proposal, payload }: { index: number; proposal: A
         {proposal.type === "EXTRA_HOUR" && (
           <label className="flex items-center gap-2 text-sm">
             <span className="text-muted-foreground">Jour</span>
-            <select value={selectedDay} onChange={(e) => setDay(Number(e.target.value))} className={selectClass}>
+            <select
+              value={selectedDay ?? ""}
+              onChange={(e) => setDay(Number(e.target.value))}
+              className={selectClass}
+              disabled={days.length === 0}
+            >
               {days.map((d) => (
                 <option key={d} value={d}>
                   J{d}
@@ -91,7 +99,10 @@ function ProposalCard({ index, proposal, payload }: { index: number; proposal: A
             </select>
           </label>
         )}
-        <Button onClick={() => void apply()} disabled={busy || alreadyActive || (needsPerson && personId === "")}>
+        <Button
+          onClick={() => void apply()}
+          disabled={busy || alreadyActive || (needsPerson && personId === "") || (proposal.type === "EXTRA_HOUR" && selectedDay === null)}
+        >
           {busy && <Loader2 className="animate-spin" aria-hidden />}
           {alreadyActive ? "Déjà active" : "Appliquer"}
         </Button>

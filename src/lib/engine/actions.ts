@@ -1,7 +1,7 @@
 // R11 — Catch-up actions: one-click effect, logged, and cancellable.
 // Action 3 « Former un remplaçant » was removed by the PM (2026-11-09).
 
-import { EXTRA_HOUR_MIN, RENFORT_S1_BUDGET, type Step } from "./config";
+import { BUSINESS_DAYS, EXTRA_HOUR_MIN, RENFORT_S1_BUDGET, type Step } from "./config";
 import type { ControlResult, Level } from "./controls";
 import type { PersonId } from "./people";
 import { currentDay, getPerson } from "./state";
@@ -94,8 +94,20 @@ export interface ActionProposal {
   type: ActionType;
   /** Pre-filled person ("personne concernée"), or null when the orchestrator must choose. */
   personId: PersonId | null;
-  /** Pre-filled day (EXTRA_HOUR: today). */
+  /** Pre-filled day (EXTRA_HOUR: today, or the next day the person is not declared absent). */
   dayIndex: number | null;
+}
+
+function isDeclaredAbsent(state: WorldState, personId: PersonId, dayIndex: number): boolean {
+  return state.adjustments.some((a) => a.personId === personId && a.dayIndex === dayIndex && a.absentDeclared);
+}
+
+/** First business day from `from` on which the person is not declared absent, or null. */
+function firstPresentDay(state: WorldState, personId: PersonId | null, from: number | null): number | null {
+  if (from === null) return null;
+  if (personId === null) return from;
+  for (let d = from; d <= BUSINESS_DAYS; d++) if (!isDeclaredAbsent(state, personId, d)) return d;
+  return null;
 }
 
 /** R11 — proposals shown when the global level is orange or red, always in ACTION_ORDER. */
@@ -106,11 +118,18 @@ export function proposeActions(state: WorldState, controls: readonly ControlResu
   return ACTION_ORDER.map((type) => ({
     type,
     personId: type === "FORCE_ORDER" || type === "EXTRA_HOUR" ? person : null,
-    dayIndex: type === "EXTRA_HOUR" ? today : null,
+    dayIndex: type === "EXTRA_HOUR" ? firstPresentDay(state, person, today) : null,
   }));
 }
 
-export type ActionRefusal = "unknown_person" | "not_contributor" | "already_forced" | "already_active" | "already_ranked" | "past_day";
+export type ActionRefusal =
+  | "unknown_person"
+  | "not_contributor"
+  | "already_forced"
+  | "already_active"
+  | "already_ranked"
+  | "past_day"
+  | "absent_that_day";
 
 function isImportanceOrder(state: WorldState): boolean {
   const order = { A: 0, B: 1, C: 2 } as const;
@@ -131,7 +150,9 @@ export function checkAction(state: WorldState, action: Action): ActionRefusal | 
       return state.renfortS1.active ? "already_active" : null;
     case "EXTRA_HOUR": {
       const today = currentDay(state);
-      return today === null || action.dayIndex < today ? "past_day" : null;
+      if (today === null || action.dayIndex < today) return "past_day";
+      // PM decision (2026-11-09): no extra hour on a day the person is declared absent.
+      return isDeclaredAbsent(state, action.personId, action.dayIndex) ? "absent_that_day" : null;
     }
     case "RERANK":
       return isImportanceOrder(state) ? "already_ranked" : null;

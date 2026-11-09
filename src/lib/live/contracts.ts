@@ -70,6 +70,8 @@ export interface ControlPayload {
   renfortActive: boolean;
   forcedPeople: PersonId[];
   today: number | null;
+  /** Declared absences (R12), so the tower does not offer an extra hour on those days. */
+  declaredAbsences: { personId: PersonId; dayIndex: number }[];
 }
 
 export interface ActiveAction {
