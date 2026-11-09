@@ -3,7 +3,7 @@
 Démo d'un outil de répartition dynamique des tâches : 200 offres marchands à publier en 22 jours ouvrés
 par 3 contributeurs (Alice, Bob, Charlie) et 1 orchestrateur, sur des données fictives et une horloge simulée partagée.
 
-> État : **étape 2 (données)** du plan de construction. Le README complet (script de démo en 5 minutes)
+> État : **étape 3 (moteur de règles)** du plan de construction. Le README complet (script de démo en 5 minutes)
 > arrive à l'étape 8.
 
 ## Stack
@@ -77,7 +77,9 @@ src/
   app/                 écrans (E0 accueil, (app)/… écrans E1 à E6) et routes API
   components/          barre supérieure, coque d'application, composants UI
   hooks/               profil (localStorage), horloge simulée, santé de la base
-  lib/engine/          logique métier pure : constantes, axe de temps simulé, personnes par défaut
+  lib/engine/          logique métier pure (R1 à R13), sans base ni UI, testée par Vitest :
+                         listes « Mes tâches », budget, sessions, réservations, contrôles de
+                         capacité, niveaux, actions de rattrapage, absences, horloge
   lib/supabase/        clients Supabase (navigateur en lecture, serveur avec clé service)
   proxy.ts             code d'accès optionnel (DEMO_ACCESS_CODE)
 ```
