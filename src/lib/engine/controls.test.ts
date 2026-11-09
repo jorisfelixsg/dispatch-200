@@ -53,13 +53,6 @@ describe("R9 — capacity controls", () => {
     expect(report.level).toBe("red");
   });
 
-  it("R9 replacement example: Alice trained on S3 at J5 with 120 S2 left → capa_S3 = 1 080 + (1 080 − 360) = 1 800", () => {
-    const state = initialState({ nowSim: simAt(5, 480), executions: execRange(1, 80, ["S2"]) });
-    expect(computeControl(state, "S3").capacity).toBe(1080);
-    const trained = applyAction(state, { type: "TRAIN_BACKUP", personId: "alice", step: "S3" });
-    expect(computeControl(trained, "S3").capacity).toBe(1800);
-  });
-
   it("R11 action 2 example: Renfort S1 at J10, 13 days left → global capacity +780 min", () => {
     const state = initialState({ nowSim: simAt(10, 480) });
     const before = computeControl(state, "global").capacity;

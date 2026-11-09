@@ -10,7 +10,7 @@ import { defaultOffers } from "@/lib/seed/offers";
 describe("R11 — catch-up actions", () => {
   it("actions are proposed only when the global level is orange or red, always in the same order", () => {
     expect([shouldProposeActions("green"), shouldProposeActions("orange"), shouldProposeActions("red")]).toEqual([false, true, true]);
-    expect(ACTION_ORDER).toEqual(["FORCE_ORDER", "RENFORT_S1", "TRAIN_BACKUP", "EXTRA_HOUR", "RERANK"]);
+    expect(ACTION_ORDER).toEqual(["FORCE_ORDER", "RENFORT_S1", "EXTRA_HOUR", "RERANK"]);
   });
 
   it("the concerned person is the only competent person of the worst control (Charlie for S3)", () => {
@@ -42,13 +42,6 @@ describe("R11 — catch-up actions", () => {
     const applied = applyAction(initialState({ nowSim: simAt(10, 480) }), { type: "RENFORT_S1" });
     expect(applied.renfortS1).toEqual({ active: true, budgetPerDay: 60, sinceDay: 10 });
     expect(revertAction(applied, { type: "RENFORT_S1" }).renfortS1.active).toBe(false);
-  });
-
-  it("R11 action 3: Alice trained on S3 → S3 added to her skills, last in her priority order; cancel removes it", () => {
-    const action: Action = { type: "TRAIN_BACKUP", personId: "alice", step: "S3" };
-    const applied = applyAction(initialState(), action);
-    expect(getPerson(applied, "alice")).toMatchObject({ skills: ["S1", "S2", "S3"], priorityOrder: ["S2", "S1", "S3"] });
-    expect(getPerson(revertAction(applied, action), "alice")).toMatchObject({ skills: ["S1", "S2"], priorityOrder: ["S2", "S1"] });
   });
 
   it("R11 action 4: +60 min for a person and a day; cancel removes them", () => {

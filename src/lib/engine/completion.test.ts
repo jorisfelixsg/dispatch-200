@@ -9,8 +9,8 @@ import { exec, execRange, initialState } from "./testing/fixtures";
 import { simAt } from "./time";
 import type { WorldState } from "./types";
 
-function input(personId: CompleteInput["personId"], offerId: number, step: CompleteInput["step"], inPriority = true): CompleteInput {
-  return { personId, offerId, step, source: "manual", inPriority, doneAtReal: "2026-11-09T10:00:00Z" };
+function input(personId: CompleteInput["personId"], offerId: number, step: CompleteInput["step"]): CompleteInput {
+  return { personId, offerId, step, source: "manual", doneAtReal: "2026-11-09T10:00:00Z" };
 }
 
 function mustComplete(state: WorldState, i: CompleteInput) {
@@ -41,7 +41,7 @@ describe("R3 — session timestamping", () => {
   });
 });
 
-describe("« Fait » click (US-03, US-05, R7, R8)", () => {
+describe("« Fait » click (US-03, US-05, R7)", () => {
   it("US-03: Alice validates S2 r5 → recorded with author and end time, her budget drops by 3 min", () => {
     const state = initialState({ nowSim: simAt(1, 540) });
     const r = mustComplete(state, input("alice", 5, "S2"));
@@ -56,12 +56,6 @@ describe("« Fait » click (US-03, US-05, R7, R8)", () => {
     const bob = mustComplete(state, input("bob", 4, "S5"));
     const charlie = completeStep(bob.state, input("charlie", 4, "S5"));
     expect(charlie).toEqual({ ok: false, error: { code: "already_done", doneBy: "bob" } });
-  });
-
-  it("R8: a step validated from « Autres tâches possibles » is stored out of priority and logs OUT_OF_PRIORITY", () => {
-    const r = mustComplete(initialState(), input("bob", 150, "S1", false));
-    expect(r.execution.inPriority).toBe(false);
-    expect(r.events.map((e) => e.type)).toEqual(["STEP_DONE", "OUT_OF_PRIORITY"]);
   });
 
   it("US-05: after 20 S4 (60 min) Bob's list is empty (« Ton heure du jour est faite »); next day the budget is back to 60", () => {

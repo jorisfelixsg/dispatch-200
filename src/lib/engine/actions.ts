@@ -1,20 +1,20 @@
 // R11 — Catch-up actions: one-click effect, logged, and cancellable.
+// Action 3 « Former un remplaçant » was removed by the PM (2026-11-09).
 
 import { EXTRA_HOUR_MIN, RENFORT_S1_BUDGET, type Step } from "./config";
 import type { ControlResult, Level } from "./controls";
-import { DEFAULT_PEOPLE, type PersonId } from "./people";
+import type { PersonId } from "./people";
 import { currentDay, getPerson } from "./state";
 import type { DayAdjustment, Person, WorldState } from "./types";
 
-export type ActionType = "FORCE_ORDER" | "RENFORT_S1" | "TRAIN_BACKUP" | "EXTRA_HOUR" | "RERANK";
+export type ActionType = "FORCE_ORDER" | "RENFORT_S1" | "EXTRA_HOUR" | "RERANK";
 
 /** R11 — actions are always proposed in this order. */
-export const ACTION_ORDER: readonly ActionType[] = ["FORCE_ORDER", "RENFORT_S1", "TRAIN_BACKUP", "EXTRA_HOUR", "RERANK"];
+export const ACTION_ORDER: readonly ActionType[] = ["FORCE_ORDER", "RENFORT_S1", "EXTRA_HOUR", "RERANK"];
 
 export type Action =
   | { type: "FORCE_ORDER"; personId: PersonId; sequence?: Step[] }
   | { type: "RENFORT_S1" }
-  | { type: "TRAIN_BACKUP"; personId: PersonId; step: Step }
   | { type: "EXTRA_HOUR"; personId: PersonId; dayIndex: number }
   | { type: "RERANK" };
 
@@ -68,13 +68,6 @@ export function applyAction(state: WorldState, action: Action): WorldState {
     case "RENFORT_S1":
       // The orchestrator gets S1 and 60 min/day from today.
       return { ...state, renfortS1: { active: true, budgetPerDay: RENFORT_S1_BUDGET, sinceDay: currentDay(state) } };
-    case "TRAIN_BACKUP":
-      // Adds the step to the skills, in last position of priority_order.
-      return updatePerson(state, action.personId, (p) => ({
-        ...p,
-        skills: p.skills.includes(action.step) ? p.skills : [...p.skills, action.step],
-        priorityOrder: p.priorityOrder.includes(action.step) ? p.priorityOrder : [...p.priorityOrder, action.step],
-      }));
     case "EXTRA_HOUR":
       return addExtra(state, action.personId, action.dayIndex, EXTRA_HOUR_MIN);
     case "RERANK":
@@ -89,16 +82,6 @@ export function revertAction(state: WorldState, action: Action): WorldState {
       return updatePerson(state, action.personId, (p) => ({ ...p, forcedMode: false }));
     case "RENFORT_S1":
       return { ...state, renfortS1: { ...state.renfortS1, active: false } };
-    case "TRAIN_BACKUP": {
-      const defaults = DEFAULT_PEOPLE.find((p) => p.id === action.personId);
-      if (defaults?.skills.includes(action.step)) return state;
-      return updatePerson(state, action.personId, (p) => ({
-        ...p,
-        skills: p.skills.filter((s) => s !== action.step),
-        priorityOrder: p.priorityOrder.filter((s) => s !== action.step),
-        forcedSequence: p.forcedSequence.filter((s) => s !== action.step),
-      }));
-    }
     case "EXTRA_HOUR":
       return addExtra(state, action.personId, action.dayIndex, -EXTRA_HOUR_MIN);
     case "RERANK":

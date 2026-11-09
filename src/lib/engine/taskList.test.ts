@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { applyAction } from "./actions";
 import { RESERVATION_TTL_MS } from "./config";
-import { computeTaskList, otherPossibleTasks, refreshTaskList, taskKey } from "./taskList";
+import { computeTaskList, refreshTaskList, taskKey } from "./taskList";
 import { exec, execRange, initialState, labels, session } from "./testing/fixtures";
 import { simAt } from "./time";
 
@@ -150,15 +150,5 @@ describe("R11 action 2 — the orchestrator's list with Renfort S1", () => {
     expect(computeTaskList(initialState(), "orchestrator").emptyReason).toBe("noSkills");
     const state = applyAction(initialState({ nowSim: simAt(10, 480) }), { type: "RENFORT_S1" });
     expect(labels(computeTaskList(state, "orchestrator").tasks)).toEqual(Array.from({ length: 20 }, (_, i) => `S1 r${i + 1}`));
-  });
-});
-
-describe("US-13 — « Autres tâches possibles »", () => {
-  it("lists ready tasks in the person's skills that are not in their list", () => {
-    const state = initialState({ nowSim: simAt(2, 600), executions: execRange(1, 12, ["S2"]) });
-    const list = computeTaskList(state, "bob");
-    const others = otherPossibleTasks(state, "bob", list.tasks);
-    expect(labels(others).slice(0, 2)).toEqual(["S1 r9", "S1 r10"]);
-    expect(others).toHaveLength(200 - 8);
   });
 });

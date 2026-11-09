@@ -169,16 +169,6 @@ export function computeTaskList(state: WorldState, personId: PersonId): TaskList
   return { personId, tasks, budget: budget.budget, consumed: budget.consumed, remaining: budget.remaining, emptyReason };
 }
 
-/**
- * US-13 — "Autres tâches possibles": ready tasks in the person's skills that are not in their
- * list (and not reserved by another active person, R7).
- */
-export function otherPossibleTasks(state: WorldState, personId: PersonId, listed: readonly Task[]): ListedTask[] {
-  const person = effectivePerson(state, personId, currentDay(state) ?? 0);
-  const inList = new Set(listed.map(taskKey));
-  return orderedCandidates(buildContext(state, personId), person, state.nowSim).filter((t) => !inList.has(taskKey(t)));
-}
-
 /** R7 — replace the person's reservations by the tasks of their list. Expired ones are dropped. */
 export function replaceReservations(state: WorldState, personId: PersonId, tasks: readonly Task[]): WorldState {
   const kept = state.reservations.filter((r) => r.personId !== personId && isReservationActive(r, state.nowReal));

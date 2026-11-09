@@ -1,4 +1,5 @@
-// "Fait" click: R3 (session cursor), R4 (consumption), R7 (no duplicate), R8 (out of priority).
+// "Fait" click: R3 (session cursor), R4 (consumption), R7 (no duplicate).
+// R8 / US-13 (« Autres tâches possibles ») were dropped by the PM (2026-11-09): every step is in priority.
 // The database enforces the same uniqueness atomically (step 4); this pure version is used by
 // the server checks and by the auto mode (R14) on an in-memory copy.
 
@@ -15,8 +16,6 @@ export interface CompleteInput {
   offerId: number;
   step: Step;
   source: "manual" | "auto";
-  /** False when validated from "Autres tâches possibles" (R8). */
-  inPriority: boolean;
   /** ISO timestamp of the click. */
   doneAtReal: string;
 }
@@ -65,7 +64,7 @@ export function completeStep(state: WorldState, input: CompleteInput): CompleteR
     doneBy: personId,
     doneAtSim: stamp.doneAtSim,
     doneAtReal: input.doneAtReal,
-    inPriority: input.inPriority,
+    inPriority: true,
     source: input.source,
   };
 
@@ -73,10 +72,6 @@ export function completeStep(state: WorldState, input: CompleteInput): CompleteR
   const events: EngineEvent[] = [
     { type: "STEP_DONE", personId, payload: { offerId, step, source: input.source }, atSim: stamp.doneAtSim },
   ];
-  // R8 — a step validated from "Autres tâches possibles" is logged as an incident.
-  if (!input.inPriority) {
-    events.push({ type: "OUT_OF_PRIORITY", personId, payload: { offerId, step }, atSim: stamp.doneAtSim });
-  }
 
   return {
     ok: true,
