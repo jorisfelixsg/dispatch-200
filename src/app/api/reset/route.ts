@@ -1,4 +1,6 @@
 import { offerToRow, personDefaultsToRow } from "@/lib/data/rows";
+import { clearSnapshots, saveSnapshots, snapshotOf } from "@/lib/data/snapshots";
+import { initialWorldState } from "@/lib/engine/state";
 import { REFERENCE_SEED, referenceCurve } from "@/lib/engine/autoplay";
 import { DEFAULT_PEOPLE } from "@/lib/engine/people";
 import { SIM_START } from "@/lib/engine/time";
@@ -33,6 +35,11 @@ export async function POST() {
       { status: 500 },
     );
   }
+
+  // R9 — snapshots restart with the J1 08:00 controls.
+  await clearSnapshots(supabase);
+  const initial = snapshotOf(initialWorldState(offers));
+  if (initial) await saveSnapshots(supabase, [initial]);
 
   return Response.json({ ok: true, durationMs: Date.now() - started });
 }

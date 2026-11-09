@@ -3,18 +3,21 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Clock, LogOut } from "lucide-react";
+import { useControlReport } from "@/hooks/useControlReport";
 import { useProfile } from "@/hooks/useProfile";
 import { useSimClock } from "@/hooks/useSimClock";
 import { getDefaultPerson, type PersonId } from "@/lib/engine/people";
 import { formatSim } from "@/lib/engine/time";
 import { navItemsFor } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
+import { LevelPill } from "./LevelPill";
 import { PersonAvatar } from "./PersonAvatar";
 
 export function TopBar({ profile }: { profile: PersonId }) {
   const person = getDefaultPerson(profile);
   const { nowSim } = useSimClock();
   const { setProfile } = useProfile();
+  const control = useControlReport();
   const pathname = usePathname();
   const router = useRouter();
   const items = navItemsFor(profile);
@@ -37,14 +40,8 @@ export function TopBar({ profile }: { profile: PersonId }) {
           <span aria-label="Horloge simulée">{formatSim(nowSim)}</span>
         </div>
 
-        {/* Global level (green / orange / red) is computed by the control tower in step 6. */}
-        <span
-          className="inline-flex items-center gap-1.5 rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground"
-          title="Le niveau global sera calculé par la tour de contrôle (étape 6)"
-        >
-          <span className="size-2 rounded-full bg-muted-foreground/40" aria-hidden />
-          Niveau —
-        </span>
+        {/* R10 — global level = worst of the five controls. */}
+        <LevelPill level={control.payload?.level ?? null} />
 
         <button
           type="button"

@@ -100,6 +100,13 @@ describe("R14 — auto mode: playing days", () => {
     expect(playCurrentDay(initialState(), 42).events.some((e) => e.type === "ABSENCE_DETECTED")).toBe(false);
   });
 
+  it("R9: a snapshot of the controls is taken at the start of every new day reached", () => {
+    const result = playUntilDay(initialState(), 10, 42);
+    expect(result.snapshots.map((s) => s.dayIndex)).toEqual([2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    expect(result.snapshots[0].controls).toHaveLength(5);
+    expect(playUntilDay(initialState(), 23, 42).snapshots.at(-1)?.dayIndex).toBe(22);
+  });
+
   it("nothing is played once the end of the month is reached", () => {
     const result = playCurrentDay(initialState({ nowSim: SIM_END }), 42);
     expect(result.executions).toEqual([]);

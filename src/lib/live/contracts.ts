@@ -3,6 +3,8 @@
 import type { Step } from "@/lib/engine/config";
 import type { PersonId } from "@/lib/engine/people";
 import type { EmptyReason } from "@/lib/engine/taskList";
+import type { ControlResult, Level } from "@/lib/engine/controls";
+import type { Indicators } from "@/lib/engine/indicators";
 
 export interface TaskView {
   offerId: number;
@@ -25,6 +27,8 @@ export interface TasksPayload {
   consumed: number;
   remaining: number;
   emptyReason: EmptyReason | null;
+  /** Business days for which this person declared an absence (R12). */
+  absences: number[];
 }
 
 export type TasksResponse = { ok: true; payload: TasksPayload } | { ok: false; error: string };
@@ -50,3 +54,16 @@ export type AutoResponse =
       durationMs: number;
     }
   | { ok: false; error: string; code?: string };
+
+export interface ControlPayload {
+  nowSim: number;
+  level: Level;
+  controls: ControlResult[];
+  indicators: Indicators;
+  actualCurve: number[];
+  referenceCurve: number[] | null;
+}
+
+export type ControlResponse = { ok: true; payload: ControlPayload } | { ok: false; error: string };
+
+export type AbsenceResponse = { ok: true; payload: TasksPayload } | { ok: false; error: string; code?: string };

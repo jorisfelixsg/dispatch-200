@@ -9,6 +9,7 @@ import { detectAbsences, markAbsencesDetected } from "./absences";
 import { consumedOn, dayBudget } from "./budget";
 import { isEndOfMonth, nextBusinessDay } from "./clock";
 import { completeStep } from "./completion";
+import { computeControls, type ControlResult, type Level } from "./controls";
 import type { PersonId } from "./people";
 import { createRng, randomInt, type Rng } from "./random";
 import { currentDay, initialWorldState } from "./state";
@@ -27,11 +28,20 @@ export interface PlannedSession {
   remaining: number;
 }
 
+/** R9 — controls at the start of a business day reached by the auto mode. */
+export interface DaySnapshot {
+  dayIndex: number;
+  atSim: number;
+  level: Level;
+  controls: ControlResult[];
+}
+
 export interface AutoResult {
   state: WorldState;
   executions: StepExecution[];
   events: EngineEvent[];
   daysPlayed: number[];
+  snapshots: DaySnapshot[];
 }
 
 /**
@@ -75,7 +85,7 @@ function playSession(state: WorldState, personId: PersonId, doneAtReal: string, 
 
 /** « Jouer la journée en cours »: the rest of today, then the next business day at 08:00 and R12. */
 export function playCurrentDay(state: WorldState, seed: number, doneAtReal = ""): AutoResult {
-  const out: AutoResult = { state, executions: [], events: [], daysPlayed: [] };
+  const out: AutoResult = { state, executions: [], events: [], daysPlayed: [], snapshots: [] };
   const day = currentDay(state);
   if (day === null || isEndOfMonth(state.nowSim)) return out;
 
@@ -94,6 +104,11 @@ export function playCurrentDay(state: WorldState, seed: number, doneAtReal = "")
     out.events.push({ type: "ABSENCE_DETECTED", personId, payload: { dayIndex: day }, atSim: endOfDay });
   }
   current = { ...current, nowSim: nextBusinessDay(current.nowSim) };
+  const newDay = currentDay(current);
+  if (newDay !== null && newDay !== day) {
+    const report = computeControls(current);
+    out.snapshots.push({ dayIndex: newDay, atSim: current.nowSim, level: report.level, controls: report.controls });
+  }
 
   out.daysPlayed.push(day);
   out.state = current;
@@ -102,13 +117,14 @@ export function playCurrentDay(state: WorldState, seed: number, doneAtReal = "")
 
 /** « Jouer jusqu'au début de Jx »: plays every day before Jx (J23 = until the end of the month). */
 export function playUntilDay(state: WorldState, targetDay: number, seed: number, doneAtReal = ""): AutoResult {
-  const out: AutoResult = { state, executions: [], events: [], daysPlayed: [] };
+  const out: AutoResult = { state, executions: [], events: [], daysPlayed: [], snapshots: [] };
   let current = state;
   while (!isEndOfMonth(current.nowSim) && (currentDay(current) ?? Infinity) < targetDay) {
     const r = playCurrentDay(current, seed, doneAtReal);
     out.executions.push(...r.executions);
     out.events.push(...r.events);
     out.daysPlayed.push(...r.daysPlayed);
+    out.snapshots.push(...r.snapshots);
     current = r.state;
   }
   out.state = current;

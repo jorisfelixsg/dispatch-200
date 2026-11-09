@@ -3,7 +3,7 @@
 Démo d'un outil de répartition dynamique des tâches : 200 offres marchands à publier en 22 jours ouvrés
 par 3 contributeurs (Alice, Bob, Charlie) et 1 orchestrateur, sur des données fictives et une horloge simulée partagée.
 
-> État : **étape 5 (mode auto et trajectoire de référence)** du plan de construction. Le README complet (script de démo en 5 minutes)
+> État : **étape 6 (tour de contrôle)** du plan de construction. Le README complet (script de démo en 5 minutes)
 > arrive à l'étape 8.
 
 ## Stack
@@ -59,7 +59,7 @@ Ne jamais préfixer la clé service par `NEXT_PUBLIC_`.
 
 1. **Supabase** : créer un projet gratuit sur supabase.com, puis copier l'URL et les deux clés (voir tableau).
    Ouvrir **SQL Editor › New query**, coller le contenu de `supabase/migrations/0001_init.sql` et cliquer sur
-   **Run**, puis faire de même, dans l’ordre, avec `0002_live_tasks.sql` et `0003_auto_mode.sql` (les scripts peuvent
+   **Run**, puis faire de même, dans l’ordre, avec `0002_live_tasks.sql`, `0003_auto_mode.sql` et `0004_control_snapshots.sql` (les scripts peuvent
    être relancés sans risque). Ils créent les tables, les droits en lecture seule pour les navigateurs, le temps réel,
    la fonction de reset et les fonctions transactionnelles « Fait », réservations, horloge et mode auto.
 2. **GitHub** : créer un dépôt vide et y pousser ce dossier.
@@ -89,6 +89,7 @@ src/
   lib/data/            lecture de l’état complet pour le moteur (serveur), conversion des lignes SQL
   lib/live/            temps réel Supabase partagé (+ polling de secours toutes les 2 s), contrats d’API
   lib/supabase/        clients Supabase (navigateur en lecture, serveur avec clé service)
-  app/api/             tasks (liste + réservations), tasks/done (« Fait »), clock (horloge), auto (mode auto), reset
+  app/api/             tasks (liste + réservations), tasks/done (« Fait »), absence, clock (horloge), auto (mode auto),
+                       control (tour de contrôle), reset
   proxy.ts             code d'accès optionnel (DEMO_ACCESS_CODE)
 ```

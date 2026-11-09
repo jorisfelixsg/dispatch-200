@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { RESERVATION_HEARTBEAT_MS, type Step } from "@/lib/engine/config";
 import type { PersonId } from "@/lib/engine/people";
 import { debounce, subscribeChanges } from "@/lib/live/changes";
-import type { DoneResponse, TasksPayload, TasksResponse } from "@/lib/live/contracts";
+import type { AbsenceResponse, DoneResponse, TasksPayload, TasksResponse } from "@/lib/live/contracts";
 
 export type TaskListState =
   | { status: "loading" }
@@ -100,5 +100,21 @@ export function useTaskList(personId: PersonId | null | undefined) {
     [personId, apply, refresh],
   );
 
-  return { state, refresh, markDone };
+  const declareAbsence = useCallback(
+    async (dayIndex: number): Promise<{ ok: boolean; message: string }> => {
+      if (!personId) return { ok: false, message: "Aucun profil." };
+      const seq = ++sequence.current;
+      try {
+        const res = await postJson<AbsenceResponse>("/api/absence", { personId, dayIndex });
+        if (!res.ok) return { ok: false, message: res.error };
+        apply(seq, res.payload);
+        return { ok: true, message: `Absence déclarée pour J${dayIndex}.` };
+      } catch (e) {
+        return { ok: false, message: e instanceof Error ? e.message : String(e) };
+      }
+    },
+    [personId, apply],
+  );
+
+  return { state, refresh, markDone, declareAbsence };
 }

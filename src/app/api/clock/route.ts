@@ -1,6 +1,8 @@
 import { failure, jsonError, readJson, serviceOr503 } from "@/lib/api/http";
 import { BUSINESS_DAYS } from "@/lib/engine/config";
-import { advanceHours, goToDayStart, nextBusinessDay } from "@/lib/engine/clock";
+import { advanceHours, businessDayOf, goToDayStart, nextBusinessDay } from "@/lib/engine/clock";
+import { saveSnapshots, snapshotOf } from "@/lib/data/snapshots";
+import { loadWorld } from "@/lib/data/world";
 import { formatSimShort } from "@/lib/engine/time";
 import type { ClockAction, ClockResponse } from "@/lib/live/contracts";
 
@@ -52,6 +54,10 @@ export async function POST(request: Request) {
     if (error) throw new Error(error.message);
     const result = data as { ok: boolean; code?: string; now_sim?: number; changed?: boolean };
     if (!result.ok) return jsonError(ERRORS[result.code ?? ""] ?? "Changement d'horloge refusé.", 200);
+    if (result.changed && businessDayOf(next) !== businessDayOf(now)) {
+      const snapshot = snapshotOf((await loadWorld(supabase)).state);
+      if (snapshot) await saveSnapshots(supabase, [snapshot]);
+    }
     return Response.json({ ok: true, nowSim: result.now_sim ?? next, changed: Boolean(result.changed) } satisfies ClockResponse);
   } catch (e) {
     return failure(e);

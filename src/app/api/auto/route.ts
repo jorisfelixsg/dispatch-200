@@ -1,4 +1,5 @@
 import { failure, jsonError, readJson, serviceOr503 } from "@/lib/api/http";
+import { saveSnapshots } from "@/lib/data/snapshots";
 import { loadWorld } from "@/lib/data/world";
 import { BUSINESS_DAYS } from "@/lib/engine/config";
 import { playCurrentDay, playUntilDay, publishedCount } from "@/lib/engine/autoplay";
@@ -85,6 +86,10 @@ export async function POST(request: Request) {
     if (error) throw new Error(error.message);
     const finish = data as { ok: boolean; code?: string };
     if (!finish.ok) return jsonError(ERRORS[finish.code ?? ""] ?? "Résultat de simulation refusé.", 200, { code: finish.code });
+    await saveSnapshots(
+      supabase,
+      result.snapshots.map((s) => ({ day_index: s.dayIndex, at_sim: s.atSim, level: s.level, controls: s.controls })),
+    );
 
     return Response.json({
       ok: true,

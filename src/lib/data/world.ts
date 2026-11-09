@@ -34,6 +34,8 @@ interface OfferInfo {
 export interface LoadedWorld {
   state: WorldState;
   autoRunning: boolean;
+  /** R15 — cumulative published at the end of J1…J22, computed at reset (null before). */
+  referenceCurve: number[] | null;
   offerInfo: Map<number, OfferInfo>;
 }
 
@@ -56,10 +58,10 @@ export async function loadWorld(supabase: SupabaseClient): Promise<LoadedWorld> 
     supabase.from("day_adjustment").select("person_id, day_index, extra_min, absent_declared, absent_detected"),
     supabase.from("session").select("person_id, day_index, cursor_sim, consumed_min"),
     supabase.from("reservation").select("person_id, offer_id, step, expires_at_real"),
-    supabase.from("sim_state").select("now_sim, auto_running, renfort_s1").eq("id", 1).maybeSingle(),
+    supabase.from("sim_state").select("now_sim, auto_running, renfort_s1, reference_curve").eq("id", 1).maybeSingle(),
   ]);
 
-  const simRow = check(sim, "de l'horloge") as Pick<SimStateRow, "now_sim" | "auto_running" | "renfort_s1"> | null;
+  const simRow = check(sim, "de l'horloge") as Pick<SimStateRow, "now_sim" | "auto_running" | "renfort_s1" | "reference_curve"> | null;
   if (!simRow) throw new NotSeededError();
   const offerRows = check(offers, "des offres") as {
     id: number;
@@ -72,6 +74,7 @@ export async function loadWorld(supabase: SupabaseClient): Promise<LoadedWorld> 
 
   return {
     autoRunning: simRow.auto_running,
+    referenceCurve: simRow.reference_curve ?? null,
     offerInfo: new Map(offerRows.map((o) => [o.id, { merchantName: o.merchant_name, category: o.category, logoUrl: o.logo_url }])),
     state: {
       nowSim: simRow.now_sim,
@@ -102,6 +105,7 @@ export async function loadOfferSlice(supabase: SupabaseClient, offerId: number):
   if (!simRow) throw new NotSeededError();
   return {
     autoRunning: simRow.auto_running,
+    referenceCurve: null,
     offerInfo: new Map(),
     state: {
       nowSim: simRow.now_sim,
@@ -140,6 +144,10 @@ export function toPayload(world: LoadedWorld, list: TaskListResult): TasksPayloa
     consumed: list.consumed,
     remaining: list.remaining,
     emptyReason: list.emptyReason,
+    absences: world.state.adjustments
+      .filter((a) => a.personId === list.personId && a.absentDeclared)
+      .map((a) => a.dayIndex)
+      .sort((a, b) => a - b),
   };
 }
 

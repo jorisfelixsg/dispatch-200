@@ -12,6 +12,7 @@ import type { TaskView } from "@/lib/live/contracts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { AbsencePanel } from "./AbsencePanel";
 
 /** Short reason shown on each task: what finishing it unblocks (from R1 and R2). */
 const REASONS: Record<Step, string> = {
@@ -48,7 +49,7 @@ interface Feedback {
 /** E1 — « Mes tâches » (contributors). */
 export function TasksScreen() {
   const { profile } = useProfile();
-  const { state, markDone } = useTaskList(profile);
+  const { state, markDone, declareAbsence } = useTaskList(profile);
   const [pending, setPending] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
 
@@ -171,6 +172,8 @@ export function TasksScreen() {
           })}
         </ol>
       )}
+
+      <AbsencePanel today={p.dayIndex} absences={p.absences} onDeclare={declareAbsence} />
     </section>
   );
 }
