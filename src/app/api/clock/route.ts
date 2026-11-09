@@ -1,6 +1,7 @@
 import { failure, jsonError, readJson, serviceOr503 } from "@/lib/api/http";
 import { BUSINESS_DAYS } from "@/lib/engine/config";
-import { advanceHours, businessDayOf, goToDayStart, nextBusinessDay } from "@/lib/engine/clock";
+import { detectAbsences } from "@/lib/engine/absences";
+import { advanceHours, businessDayOf, dayLeft, goToDayStart, nextBusinessDay } from "@/lib/engine/clock";
 import { saveSnapshots, snapshotOf } from "@/lib/data/snapshots";
 import { loadWorld } from "@/lib/data/world";
 import { formatSimShort } from "@/lib/engine/time";
@@ -55,7 +56,22 @@ export async function POST(request: Request) {
     const result = data as { ok: boolean; code?: string; now_sim?: number; changed?: boolean };
     if (!result.ok) return jsonError(ERRORS[result.code ?? ""] ?? "Changement d'horloge refusé.", 200);
     if (result.changed && businessDayOf(next) !== businessDayOf(now)) {
-      const snapshot = snapshotOf((await loadWorld(supabase)).state);
+      const world = await loadWorld(supabase);
+      // R12 — detected absences for the day being left (PM: only that day on a multi-day jump).
+      const left = dayLeft(now, next);
+      const absent = left === null ? [] : detectAbsences(world.state, left);
+      if (absent.length > 0 && left !== null) {
+        const { error: adjError } = await supabase
+          .from("day_adjustment")
+          .upsert(absent.map((id) => ({ person_id: id, day_index: left, absent_detected: true })), { onConflict: "person_id,day_index" });
+        if (adjError) throw new Error(adjError.message);
+        const { error: evError } = await supabase
+          .from("event")
+          .insert(absent.map((id) => ({ type: "ABSENCE_DETECTED", person_id: id, payload: { dayIndex: left }, at_sim: next })));
+        if (evError) throw new Error(evError.message);
+      }
+      // R9 — snapshot of the controls at the start of the new day.
+      const snapshot = snapshotOf(world.state);
       if (snapshot) await saveSnapshots(supabase, [snapshot]);
     }
     return Response.json({ ok: true, nowSim: result.now_sim ?? next, changed: Boolean(result.changed) } satisfies ClockResponse);

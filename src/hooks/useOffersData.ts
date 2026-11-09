@@ -36,7 +36,7 @@ export function useOffersData(reloadKey: unknown): OffersDataState & { reload: (
   useEffect(() => {
     const later = debounce(reload, 300);
     const unsubscribe = subscribeChanges((source) => {
-      if (source !== "sim_state") later.run();
+      if (source !== "sim_state" && source !== "event") later.run();
     });
     return () => {
       later.cancel();

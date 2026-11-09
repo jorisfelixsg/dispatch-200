@@ -13,6 +13,7 @@ export type ChangeSource =
   | "day_adjustment"
   | "applied_action"
   | "offer"
+  | "event"
   | "poll";
 
 const TABLES: Exclude<ChangeSource, "poll">[] = [
@@ -22,6 +23,7 @@ const TABLES: Exclude<ChangeSource, "poll">[] = [
   "day_adjustment",
   "applied_action",
   "offer",
+  "event",
 ];
 
 export const FALLBACK_POLL_MS = 2000;

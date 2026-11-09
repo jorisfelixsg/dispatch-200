@@ -43,7 +43,7 @@ export function isEndOfMonth(now: number): boolean {
   return now >= SIM_END;
 }
 
-/** Business days left behind when the clock moves from `from` to `to` (used for R12 detection). */
+/** Business days left behind when the clock moves from `from` to `to`. */
 export function endedBusinessDays(from: number, to: number): number[] {
   const a = businessDayOf(from);
   const b = businessDayOf(to);
@@ -51,4 +51,15 @@ export function endedBusinessDays(from: number, to: number): number[] {
   const days: number[] = [];
   for (let d = a; d < b; d++) days.push(d);
   return days;
+}
+
+/**
+ * R12 — the business day whose absences must be checked when the clock moves from `from` to
+ * `to`, or null if the day did not change. PM decision (2026-11-09): on a jump over several days,
+ * only the day being left is checked (nobody could work on the skipped days).
+ */
+export function dayLeft(from: number, to: number): number | null {
+  const a = businessDayOf(from);
+  const b = businessDayOf(to);
+  return a !== null && b !== null && b > a ? a : null;
 }

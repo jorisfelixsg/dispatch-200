@@ -7,6 +7,7 @@ import type { ControlResult, Level } from "@/lib/engine/controls";
 import { getDefaultPerson } from "@/lib/engine/people";
 import { LEVEL_LABEL, LevelPill } from "@/components/LevelPill";
 import { cn } from "@/lib/utils";
+import { ActionsPanel } from "./ActionsPanel";
 import { ProgressChart } from "./ProgressChart";
 
 const LEVEL_BADGE: Record<Level, string> = {
@@ -196,10 +197,7 @@ export function ControlScreen() {
         <ProgressChart actual={payload.actualCurve} reference={payload.referenceCurve} />
       </div>
 
-      <p className="rounded-xl border border-dashed border-border bg-card p-4 text-sm text-muted-foreground">
-        Les actions de rattrapage (forcer l&apos;ordre, renfort S1, heure exceptionnelle, prioriser les marchands
-        importants) seront proposées ici à l&apos;étape 7, quand le niveau global sera Orange ou Rouge.
-      </p>
+      <ActionsPanel payload={payload} />
     </section>
   );
 }

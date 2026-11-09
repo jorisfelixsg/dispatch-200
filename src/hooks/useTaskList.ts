@@ -65,7 +65,9 @@ export function useTaskList(personId: PersonId | null | undefined) {
     if (!personId) return;
     const later = debounce(() => void refresh(), 50);
     later.run();
-    const unsubscribe = subscribeChanges(() => later.run());
+    const unsubscribe = subscribeChanges((source) => {
+      if (source !== "event") later.run();
+    });
     const heartbeat = window.setInterval(() => void refresh(), RESERVATION_HEARTBEAT_MS);
     return () => {
       later.cancel();

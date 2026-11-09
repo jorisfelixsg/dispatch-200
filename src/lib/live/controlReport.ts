@@ -42,7 +42,9 @@ export function subscribeControlReport(listener: () => void): () => void {
   listeners.add(listener);
   if (listeners.size === 1) {
     void refreshControlReport();
-    unsubscribe = subscribeChanges(() => later?.run());
+    unsubscribe = subscribeChanges((source) => {
+      if (source !== "event") later?.run();
+    });
   }
   return () => {
     listeners.delete(listener);

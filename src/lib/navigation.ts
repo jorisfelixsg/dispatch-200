@@ -9,8 +9,8 @@ export interface NavItem {
   roles: Role[];
 }
 
-// Screen map (spec section 4). A contributor sees E1 and E3; the orchestrator sees E2 to E6
-// (and E1 when the "Renfort S1" action is active — wired in step 7).
+// Screen map (spec section 4). A contributor sees E1 and E3; the orchestrator sees E2 to E6,
+// and E1 when the "Renfort S1" action is active (R11 action 2).
 export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/tasks", label: "Mes tâches", code: "E1", roles: ["contributor"] },
   { href: "/control", label: "Tour de contrôle", code: "E2", roles: ["orchestrator"] },
@@ -20,17 +20,24 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/log", label: "Journal", code: "E6", roles: ["orchestrator"] },
 ];
 
-export function navItemsFor(profile: PersonId): NavItem[] {
+export interface NavOptions {
+  /** R11 action 2 — the orchestrator also gets « Mes tâches ». */
+  renfortActive?: boolean;
+}
+
+export function navItemsFor(profile: PersonId, options: NavOptions = {}): NavItem[] {
   const role = getDefaultPerson(profile).role;
-  return NAV_ITEMS.filter((item) => item.roles.includes(role));
+  return NAV_ITEMS.filter(
+    (item) => item.roles.includes(role) || (role === "orchestrator" && item.href === "/tasks" && options.renfortActive),
+  );
 }
 
 export function homePathFor(profile: PersonId): string {
   return getDefaultPerson(profile).role === "orchestrator" ? "/control" : "/tasks";
 }
 
-export function canAccess(profile: PersonId, pathname: string): boolean {
-  return navItemsFor(profile).some(
+export function canAccess(profile: PersonId, pathname: string, options: NavOptions = {}): boolean {
+  return navItemsFor(profile, options).some(
     (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
   );
 }

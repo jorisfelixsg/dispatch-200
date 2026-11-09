@@ -6,6 +6,7 @@ import { Clock, LogOut } from "lucide-react";
 import { useControlReport } from "@/hooks/useControlReport";
 import { useProfile } from "@/hooks/useProfile";
 import { useSimClock } from "@/hooks/useSimClock";
+import { useSimState } from "@/hooks/useSimState";
 import { getDefaultPerson, type PersonId } from "@/lib/engine/people";
 import { formatSim } from "@/lib/engine/time";
 import { navItemsFor } from "@/lib/navigation";
@@ -20,7 +21,8 @@ export function TopBar({ profile }: { profile: PersonId }) {
   const control = useControlReport();
   const pathname = usePathname();
   const router = useRouter();
-  const items = navItemsFor(profile);
+  const { state: sim } = useSimState();
+  const items = navItemsFor(profile, { renfortActive: Boolean(sim?.renfort_s1?.active) });
 
   const changeProfile = () => {
     setProfile(null);

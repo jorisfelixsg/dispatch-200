@@ -4,6 +4,7 @@ import type { Step } from "@/lib/engine/config";
 import type { PersonId } from "@/lib/engine/people";
 import type { EmptyReason } from "@/lib/engine/taskList";
 import type { ControlResult, Level } from "@/lib/engine/controls";
+import type { ActionProposal, ActionType } from "@/lib/engine/actions";
 import type { Indicators } from "@/lib/engine/indicators";
 
 export interface TaskView {
@@ -62,8 +63,24 @@ export interface ControlPayload {
   indicators: Indicators;
   actualCurve: number[];
   referenceCurve: number[] | null;
+  /** R11 — proposals (empty when the global level is green). */
+  proposals: ActionProposal[];
+  /** Applied actions that are not cancelled, oldest first. */
+  activeActions: ActiveAction[];
+  renfortActive: boolean;
+  forcedPeople: PersonId[];
+  today: number | null;
+}
+
+export interface ActiveAction {
+  id: number;
+  type: ActionType;
+  params: { personId?: PersonId; dayIndex?: number; sinceDay?: number | null; sequence?: Step[] };
+  appliedAtSim: number;
 }
 
 export type ControlResponse = { ok: true; payload: ControlPayload } | { ok: false; error: string };
 
 export type AbsenceResponse = { ok: true; payload: TasksPayload } | { ok: false; error: string; code?: string };
+
+export type ActionsResponse = { ok: true; id: number } | { ok: false; error: string; code?: string };

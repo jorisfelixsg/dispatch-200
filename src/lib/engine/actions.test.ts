@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { declareAbsence } from "./absences";
-import { ACTION_ORDER, applyAction, concernedPerson, revertAction, shouldProposeActions, type Action } from "./actions";
+import { ACTION_ORDER, applyAction, checkAction, concernedPerson, proposeActions, revertAction, shouldProposeActions, type Action } from "./actions";
 import { computeControls } from "./controls";
 import { getPerson, initialWorldState } from "./state";
 import { execRange, initialState } from "./testing/fixtures";
@@ -61,5 +61,41 @@ describe("R11 — catch-up actions", () => {
     expect(next40.every((o) => o.importance === "B")).toBe(true);
     const reverted = revertAction(applied, { type: "RERANK" });
     expect(reverted.offers.every((o) => o.rank === o.id)).toBe(true);
+  });
+});
+
+describe("R11 — proposals and one-click guards", () => {
+  it("no proposal when the global level is green; otherwise the 4 actions in order, with the concerned person pre-filled", () => {
+    const green = initialState();
+    const greenReport = computeControls(green);
+    expect(proposeActions(green, greenReport.controls, greenReport.level)).toEqual([]);
+
+    let state = initialState({
+      nowSim: simAt(5, 480),
+      executions: [...execRange(1, 30, ["S1", "S2", "S3", "S4"]), ...execRange(31, 100, ["S1", "S2", "S4"])],
+    });
+    for (const d of [5, 6]) {
+      const r = declareAbsence(state, "charlie", d);
+      if (r.ok) state = r.state;
+    }
+    const report = computeControls(state);
+    expect(proposeActions(state, report.controls, report.level)).toEqual([
+      { type: "FORCE_ORDER", personId: "charlie", dayIndex: null },
+      { type: "RENFORT_S1", personId: null, dayIndex: null },
+      { type: "EXTRA_HOUR", personId: "charlie", dayIndex: 5 },
+      { type: "RERANK", personId: null, dayIndex: null },
+    ]);
+  });
+
+  it("refuses to apply an action twice or on a past day", () => {
+    const forced = applyAction(initialState(), { type: "FORCE_ORDER", personId: "charlie" });
+    expect(checkAction(forced, { type: "FORCE_ORDER", personId: "charlie" })).toBe("already_forced");
+    const renfort = applyAction(initialState(), { type: "RENFORT_S1" });
+    expect(checkAction(renfort, { type: "RENFORT_S1" })).toBe("already_active");
+    expect(checkAction(initialState({ nowSim: simAt(5, 480) }), { type: "EXTRA_HOUR", personId: "bob", dayIndex: 4 })).toBe("past_day");
+    expect(checkAction(initialState(), { type: "FORCE_ORDER", personId: "orchestrator" })).toBe("not_contributor");
+    const state = initialWorldState(defaultOffers());
+    expect(checkAction(state, { type: "RERANK" })).toBeNull();
+    expect(checkAction(applyAction(state, { type: "RERANK" }), { type: "RERANK" })).toBe("already_ranked");
   });
 });

@@ -173,7 +173,7 @@ export function TasksScreen() {
         </ol>
       )}
 
-      <AbsencePanel today={p.dayIndex} absences={p.absences} onDeclare={declareAbsence} />
+      {profile !== "orchestrator" && <AbsencePanel today={p.dayIndex} absences={p.absences} onDeclare={declareAbsence} />}
     </section>
   );
 }

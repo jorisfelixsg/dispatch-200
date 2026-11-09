@@ -2,7 +2,7 @@
 
 import { consumedOn, dayBudget } from "./budget";
 import type { PersonId } from "./people";
-import { currentDay } from "./state";
+import { currentDay, effectivePerson } from "./state";
 import type { DayAdjustment, WorldState } from "./types";
 
 function upsertAdjustment(
@@ -25,13 +25,22 @@ export function declareAbsence(state: WorldState, personId: PersonId, dayIndex: 
   return { ok: true, state: upsertAdjustment(state, personId, dayIndex, (a) => ({ ...a, absentDeclared: true })) };
 }
 
+/** True while at least one step of the person's skills is still to do on some offer. */
+export function hasRemainingWork(state: WorldState, personId: PersonId, dayIndex: number): boolean {
+  const skills = effectivePerson(state, personId, dayIndex).skills;
+  const done = new Set(state.executions.map((e) => `${e.offerId}:${e.step}`));
+  return state.offers.some((o) => skills.some((s) => !done.has(`${o.id}:${s}`)));
+}
+
 /**
  * Detected absence, evaluated when the clock moves past `dayIndex`: a person who had a budget
  * that day (so no declared absence) and consumed nothing. No retroactive effect on the budget.
+ * PM decision (2026-11-09): nobody is detected absent once every step of their skills is done.
  */
 export function detectAbsences(state: WorldState, dayIndex: number): PersonId[] {
   return state.people
     .filter((p) => dayBudget(state, p.id, dayIndex) > 0 && consumedOn(state, p.id, dayIndex) === 0)
+    .filter((p) => hasRemainingWork(state, p.id, dayIndex))
     .map((p) => p.id);
 }
 

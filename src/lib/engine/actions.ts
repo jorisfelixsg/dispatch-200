@@ -89,3 +89,53 @@ export function revertAction(state: WorldState, action: Action): WorldState {
       return rerank(state, false);
   }
 }
+
+export interface ActionProposal {
+  type: ActionType;
+  /** Pre-filled person ("personne concernée"), or null when the orchestrator must choose. */
+  personId: PersonId | null;
+  /** Pre-filled day (EXTRA_HOUR: today). */
+  dayIndex: number | null;
+}
+
+/** R11 — proposals shown when the global level is orange or red, always in ACTION_ORDER. */
+export function proposeActions(state: WorldState, controls: readonly ControlResult[], level: Level): ActionProposal[] {
+  if (!shouldProposeActions(level)) return [];
+  const person = concernedPerson(controls);
+  const today = currentDay(state);
+  return ACTION_ORDER.map((type) => ({
+    type,
+    personId: type === "FORCE_ORDER" || type === "EXTRA_HOUR" ? person : null,
+    dayIndex: type === "EXTRA_HOUR" ? today : null,
+  }));
+}
+
+export type ActionRefusal = "unknown_person" | "not_contributor" | "already_forced" | "already_active" | "already_ranked" | "past_day";
+
+function isImportanceOrder(state: WorldState): boolean {
+  const order = { A: 0, B: 1, C: 2 } as const;
+  const byRank = [...state.offers].sort((a, b) => a.rank - b.rank);
+  return byRank.every((o, i) => i === 0 || order[byRank[i - 1].importance] < order[o.importance] || (order[byRank[i - 1].importance] === order[o.importance] && byRank[i - 1].id < o.id));
+}
+
+/** Checks that an action can be applied now (one-click guards, no business rule beyond R11). */
+export function checkAction(state: WorldState, action: Action): ActionRefusal | null {
+  if ("personId" in action) {
+    const person = state.people.find((p) => p.id === action.personId);
+    if (!person) return "unknown_person";
+    if (person.role !== "contributor") return "not_contributor";
+    if (action.type === "FORCE_ORDER" && person.forcedMode) return "already_forced";
+  }
+  switch (action.type) {
+    case "RENFORT_S1":
+      return state.renfortS1.active ? "already_active" : null;
+    case "EXTRA_HOUR": {
+      const today = currentDay(state);
+      return today === null || action.dayIndex < today ? "past_day" : null;
+    }
+    case "RERANK":
+      return isImportanceOrder(state) ? "already_ranked" : null;
+    default:
+      return null;
+  }
+}
