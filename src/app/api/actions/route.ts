@@ -4,7 +4,8 @@ import { applyAction, checkAction, revertAction, type Action, type ActionRefusal
 import { BUSINESS_DAYS } from "@/lib/engine/config";
 import { isPersonId } from "@/lib/engine/people";
 import type { WorldState } from "@/lib/engine/types";
-import type { ActionsResponse } from "@/lib/live/contracts";
+import type { ActionPreview, ActionsResponse, PreviewResponse } from "@/lib/live/contracts";
+import { computeControls } from "@/lib/engine/controls";
 
 const TYPES: readonly ActionType[] = ["FORCE_ORDER", "RENFORT_S1", "EXTRA_HOUR", "RERANK"];
 
@@ -57,10 +58,13 @@ function diff(before: WorldState, after: WorldState) {
   return { people, renfort, adjustments, ranks };
 }
 
-/** R11 — apply (op: "apply") or cancel (op: "cancel", id) a catch-up action, in one transaction. */
+/**
+ * R11 — apply (op: "apply") or cancel (op: "cancel", id) a catch-up action, in one transaction.
+ * US-18 — op: "preview" returns the impact of an action without applying it.
+ */
 export async function POST(request: Request) {
   const body = await readJson(request);
-  if (!body || (body.op !== "apply" && body.op !== "cancel")) return jsonError("Requête invalide.", 400);
+  if (!body || (body.op !== "apply" && body.op !== "cancel" && body.op !== "preview")) return jsonError("Requête invalide.", 400);
   const supabase = serviceOr503();
   if (supabase instanceof Response) return supabase;
 
@@ -69,7 +73,7 @@ export async function POST(request: Request) {
     let action: Action | null;
     let actionId: number | null = null;
 
-    if (body.op === "apply") {
+    if (body.op === "apply" || body.op === "preview") {
       if (!(TYPES as readonly unknown[]).includes(body.type)) return jsonError("Action inconnue.", 400);
       action = toAction(body.type, { personId: body.personId, dayIndex: body.dayIndex });
       if (!action) return jsonError("Paramètres de l'action invalides.", 400);
@@ -86,7 +90,22 @@ export async function POST(request: Request) {
       actionId = data.id as number;
     }
 
-    const after = body.op === "apply" ? applyAction(world.state, action) : revertAction(world.state, action);
+    const after = body.op === "cancel" ? revertAction(world.state, action) : applyAction(world.state, action);
+
+    if (body.op === "preview") {
+      // US-18 — the controls whose margin changes, before and after.
+      const before = computeControls(world.state);
+      const next = computeControls(after);
+      const preview: ActionPreview = {
+        changes: before.controls
+          .map((c) => ({ controlId: c.id, marginBefore: c.margin, marginAfter: next.controls.find((n) => n.id === c.id)?.margin ?? c.margin }))
+          .filter((c) => c.marginAfter !== c.marginBefore),
+        levelBefore: before.level,
+        levelAfter: next.level,
+      };
+      return Response.json({ ok: true, preview } satisfies PreviewResponse);
+    }
+
     const changes = diff(world.state, after);
     const params = Object.fromEntries(Object.entries(action).filter(([k]) => k !== "type"));
     if (action.type === "RENFORT_S1" && body.op === "apply") Object.assign(params, { sinceDay: after.renfortS1.sinceDay });

@@ -6,6 +6,7 @@ import type { EmptyReason } from "@/lib/engine/taskList";
 import type { ControlResult, Level } from "@/lib/engine/controls";
 import type { ActionProposal, ActionType } from "@/lib/engine/actions";
 import type { Indicators } from "@/lib/engine/indicators";
+import type { Projection } from "@/lib/engine/projection";
 
 export interface TaskView {
   offerId: number;
@@ -86,3 +87,14 @@ export type ControlResponse = { ok: true; payload: ControlPayload } | { ok: fals
 export type AbsenceResponse = { ok: true; payload: TasksPayload } | { ok: false; error: string; code?: string };
 
 export type ActionsResponse = { ok: true; id: number } | { ok: false; error: string; code?: string };
+
+/** US-18 — impact of a catch-up action before applying it: every control whose margin changes. */
+export interface ActionPreview {
+  changes: { controlId: ControlResult["id"]; marginBefore: number; marginAfter: number }[];
+  levelBefore: Level;
+  levelAfter: Level;
+}
+
+export type PreviewResponse = { ok: true; preview: ActionPreview } | { ok: false; error: string; code?: string };
+
+export type ProjectionResponse = { ok: true; projection: Projection } | { ok: false; error: string };

@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import type { ActionProposal, ActionType } from "@/lib/engine/actions";
 import { BUSINESS_DAYS } from "@/lib/engine/config";
 import { getDefaultPerson, type PersonId } from "@/lib/engine/people";
-import type { ControlPayload } from "@/lib/live/contracts";
-import { applyActionRequest } from "@/lib/live/actionsClient";
+import type { ActionPreview, ControlPayload } from "@/lib/live/contracts";
+import { applyActionRequest, previewActionRequest } from "@/lib/live/actionsClient";
+import { LEVEL_LABEL } from "@/components/LevelPill";
 import { ACTION_TITLES, describeAction } from "@/lib/ui/actionLabels";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -20,6 +21,10 @@ const EFFECTS: Record<ActionType, string> = {
   EXTRA_HOUR: "+60 min de budget pour une personne, un jour donné.",
   RERANK: "Les marchands A passent en tête (rangs 1 à 40), puis B, puis C, dans l'ordre d'origine.",
 };
+
+function signed(n: number): string {
+  return n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : "0";
+}
 
 const selectClass =
   "h-11 rounded-md border border-border bg-card px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
@@ -42,6 +47,27 @@ function ProposalCard({ index, proposal, payload }: { index: number; proposal: A
     (proposal.type === "RENFORT_S1" && payload.renfortActive) ||
     (proposal.type === "RERANK" && payload.activeActions.some((a) => a.type === "RERANK")) ||
     (proposal.type === "FORCE_ORDER" && personId !== "" && payload.forcedPeople.includes(personId));
+
+  // US-18 — impact preview, refreshed when the parameters or the state change.
+  const [preview, setPreview] = useState<ActionPreview | null>(null);
+  const ready = !alreadyActive && !(needsPerson && personId === "") && !(proposal.type === "EXTRA_HOUR" && selectedDay === null);
+  const previewKey = `${proposal.type}|${personId}|${proposal.type === "EXTRA_HOUR" ? selectedDay : ""}|${payload.nowSim}|${payload.controls.map((c) => c.margin).join(",")}`;
+  useEffect(() => {
+    if (!ready) return;
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      void previewActionRequest(proposal.type, needsPerson ? personId || null : null, proposal.type === "EXTRA_HOUR" ? selectedDay : null).then(
+        (p) => {
+          if (!cancelled) setPreview(p);
+        },
+      );
+    }, 250);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- previewKey sums up the inputs
+  }, [previewKey, ready]);
 
   const apply = async () => {
     setBusy(true);
@@ -108,6 +134,29 @@ function ProposalCard({ index, proposal, payload }: { index: number; proposal: A
         </Button>
       </div>
 
+      {ready && preview && (
+        <p className="pl-10 text-sm text-muted-foreground">
+          {preview.changes.length === 0 ? (
+            "Impact estimé : aucune marge ne change (cette action agit sur l'ordre des tâches, pas sur la capacité)."
+          ) : (
+            <>
+              Impact estimé :{" "}
+              {preview.changes.map((c, i) => (
+                <span key={c.controlId}>
+                  {i > 0 && ", "}
+                  {c.controlId === "global" ? "global" : c.controlId}{" "}
+                  <span className="font-mono tabular-nums text-foreground">
+                    {signed(c.marginBefore)} → {signed(c.marginAfter)} min
+                  </span>
+                </span>
+              ))}
+              {preview.levelAfter !== preview.levelBefore
+                ? ` · niveau global ${LEVEL_LABEL[preview.levelBefore]} → ${LEVEL_LABEL[preview.levelAfter]}`
+                : ` · niveau global inchangé (${LEVEL_LABEL[preview.levelAfter]})`}
+            </>
+          )}
+        </p>
+      )}
       {message && <p role="status" className={cn("pl-10 text-sm", message.ok ? "text-ok" : "text-danger")}>{message.text}</p>}
     </li>
   );

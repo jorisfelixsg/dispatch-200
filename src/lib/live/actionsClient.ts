@@ -2,7 +2,7 @@
 
 import type { ActionType } from "@/lib/engine/actions";
 import type { PersonId } from "@/lib/engine/people";
-import type { ActionsResponse } from "./contracts";
+import type { ActionPreview, ActionsResponse, PreviewResponse } from "./contracts";
 import { refreshControlReport } from "./controlReport";
 
 async function post(body: unknown): Promise<{ ok: boolean; message: string }> {
@@ -28,4 +28,23 @@ export function applyActionRequest(type: ActionType, personId?: PersonId | null,
 /** R11 — cancel an applied action. */
 export function cancelActionRequest(id: number) {
   return post({ op: "cancel", id });
+}
+
+/** US-18 — impact of an action before applying it (nothing is written). */
+export async function previewActionRequest(
+  type: ActionType,
+  personId?: PersonId | null,
+  dayIndex?: number | null,
+): Promise<ActionPreview | null> {
+  try {
+    const res = await fetch("/api/actions", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ op: "preview", type, personId: personId ?? undefined, dayIndex: dayIndex ?? undefined }),
+    });
+    const data = (await res.json()) as PreviewResponse;
+    return data.ok ? data.preview : null;
+  } catch {
+    return null;
+  }
 }

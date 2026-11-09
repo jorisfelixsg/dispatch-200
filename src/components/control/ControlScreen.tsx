@@ -9,6 +9,7 @@ import { LEVEL_LABEL, LevelPill } from "@/components/LevelPill";
 import { cn } from "@/lib/utils";
 import { ActionsPanel } from "./ActionsPanel";
 import { ProgressChart } from "./ProgressChart";
+import { ProjectionCard } from "./ProjectionCard";
 
 const LEVEL_BADGE: Record<Level, string> = {
   green: "bg-ok/15 text-ok",
@@ -196,6 +197,8 @@ export function ControlScreen() {
         )}
         <ProgressChart actual={payload.actualCurve} reference={payload.referenceCurve} />
       </div>
+
+      <ProjectionCard />
 
       <ActionsPanel payload={payload} />
     </section>
