@@ -3,7 +3,7 @@
 Démo d'un outil de répartition dynamique des tâches : 200 offres marchands à publier en 22 jours ouvrés
 par 3 contributeurs (Alice, Bob, Charlie) et 1 orchestrateur, sur des données fictives et une horloge simulée partagée.
 
-> État : **étape 1 (squelette)** du plan de construction. Le README complet (script de démo en 5 minutes)
+> État : **étape 2 (données)** du plan de construction. Le README complet (script de démo en 5 minutes)
 > arrive à l'étape 8.
 
 ## Stack
@@ -53,10 +53,16 @@ Ne jamais préfixer la clé service par `NEXT_PUBLIC_`.
 ## Déploiement (Supabase + Vercel)
 
 1. **Supabase** : créer un projet gratuit sur supabase.com, puis copier l'URL et les deux clés (voir tableau).
-   Le schéma SQL sera ajouté à l'étape 2.
+   Ouvrir **SQL Editor › New query**, coller le contenu de `supabase/migrations/0001_init.sql` et cliquer sur
+   **Run** (le script peut être relancé sans risque). Il crée les tables, les droits en lecture seule pour les
+   navigateurs, le temps réel et la fonction de reset.
 2. **GitHub** : créer un dépôt vide et y pousser ce dossier.
 3. **Vercel** : « Add New › Project », importer le dépôt, laisser le preset Next.js, renseigner les 4 variables
    d'environnement, puis « Deploy ». Chaque push sur la branche principale redéploie.
+   Vérifier que **Settings › Build and Deployment › Framework Preset** vaut **Next.js** (sinon : page 404).
+   Sur l'offre Hobby avec un dépôt privé, Vercel refuse les commits d'un autre compte GitHub que le propriétaire.
+4. **Première initialisation** : ouvrir l'application, choisir le profil Orchestrateur, écran **Horloge**,
+   puis **Réinitialiser la démo**. Les 200 offres fictives sont créées (toujours les mêmes, seed déterministe).
 
 ## Avant une démo : réactiver Supabase
 

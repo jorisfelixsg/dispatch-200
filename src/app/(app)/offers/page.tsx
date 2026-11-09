@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { Placeholder } from "@/components/Placeholder";
+import { OffersScreen } from "@/components/offers/OffersScreen";
 
 export const metadata: Metadata = { title: "Suivi des offres · Dispatch 200 offres" };
 
 export default function Page() {
-  return <Placeholder title="Suivi des offres" step={2} />;
+  return <OffersScreen />;
 }

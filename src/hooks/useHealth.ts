@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import type { HealthResponse, HealthStatus } from "@/app/api/health/route";
+import { useSimState } from "./useSimState";
 
-/** Database reachability, polled every 30 s. `null` while the first check runs. */
+/** Database status, checked every 30 s and again whenever the demo is reset. */
 export function useHealth(): HealthStatus | null {
   const [status, setStatus] = useState<HealthStatus | null>(null);
+  const epoch = useSimState().state?.epoch;
 
   useEffect(() => {
     let cancelled = false;
@@ -24,7 +26,7 @@ export function useHealth(): HealthStatus | null {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, []);
+  }, [epoch]);
 
   return status;
 }
