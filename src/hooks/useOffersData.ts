@@ -10,6 +10,7 @@ import {
   type StepExecutionRow,
 } from "@/lib/data/rows";
 import type { Offer, Person, StepExecution } from "@/lib/engine/types";
+import { debounce, subscribeChanges } from "@/lib/live/changes";
 import { getBrowserSupabase } from "@/lib/supabase/browser";
 
 export interface OffersData {
@@ -25,12 +26,23 @@ export type OffersDataState =
 
 /**
  * Offers, step executions and people, read with the anon key.
- * Reloads whenever `reloadKey` changes (e.g. the reset epoch). Live updates arrive in step 4.
+ * Reloads whenever `reloadKey` changes (e.g. the reset epoch) and on every pushed change (R6).
  */
 export function useOffersData(reloadKey: unknown): OffersDataState & { reload: () => void } {
   const [state, setState] = useState<OffersDataState>({ status: "loading" });
   const [tick, setTick] = useState(0);
   const reload = useCallback(() => setTick((t) => t + 1), []);
+
+  useEffect(() => {
+    const later = debounce(reload, 300);
+    const unsubscribe = subscribeChanges((source) => {
+      if (source !== "sim_state") later.run();
+    });
+    return () => {
+      later.cancel();
+      unsubscribe();
+    };
+  }, [reload]);
 
   useEffect(() => {
     const supabase = getBrowserSupabase();

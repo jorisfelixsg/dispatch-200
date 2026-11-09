@@ -1,8 +1,17 @@
 // Database row shapes (snake_case) and mappers to engine types.
 
-import type { Step } from "@/lib/engine/config";
+import { RENFORT_S1_BUDGET, type Step } from "@/lib/engine/config";
 import type { PersonDefaults, PersonId, Role } from "@/lib/engine/people";
-import type { Importance, Offer, Person, StepExecution } from "@/lib/engine/types";
+import type {
+  DayAdjustment,
+  Importance,
+  Offer,
+  Person,
+  RenfortS1,
+  Reservation,
+  Session,
+  StepExecution,
+} from "@/lib/engine/types";
 
 export interface OfferRow {
   id: number;
@@ -119,5 +128,53 @@ export function personDefaultsToRow(p: PersonDefaults, sortOrder: number): Perso
     forced_sequence: p.majorStep ? [p.majorStep] : [],
     daily_budget_min: p.dailyBudgetMin,
     sort_order: sortOrder,
+  };
+}
+
+export interface DayAdjustmentRow {
+  person_id: PersonId;
+  day_index: number;
+  extra_min: number;
+  absent_declared: boolean;
+  absent_detected: boolean;
+}
+
+export interface SessionRow {
+  person_id: PersonId;
+  day_index: number;
+  cursor_sim: number;
+  consumed_min: number;
+}
+
+export interface ReservationRow {
+  person_id: PersonId;
+  offer_id: number;
+  step: Step;
+  expires_at_real: string;
+}
+
+export function adjustmentFromRow(r: DayAdjustmentRow): DayAdjustment {
+  return {
+    personId: r.person_id,
+    dayIndex: r.day_index,
+    extraMin: r.extra_min,
+    absentDeclared: r.absent_declared,
+    absentDetected: r.absent_detected,
+  };
+}
+
+export function sessionFromRow(r: SessionRow): Session {
+  return { personId: r.person_id, dayIndex: r.day_index, cursorSim: r.cursor_sim, consumedMin: r.consumed_min };
+}
+
+export function reservationFromRow(r: ReservationRow): Reservation {
+  return { personId: r.person_id, offerId: r.offer_id, step: r.step, expiresAtReal: Date.parse(r.expires_at_real) };
+}
+
+export function renfortFromRow(r: SimStateRow["renfort_s1"] | null | undefined): RenfortS1 {
+  return {
+    active: Boolean(r?.active),
+    budgetPerDay: r?.budgetMin ?? RENFORT_S1_BUDGET,
+    sinceDay: r?.sinceDay ?? null,
   };
 }

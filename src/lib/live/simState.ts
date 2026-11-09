@@ -2,10 +2,10 @@
 
 import type { SimStateRow } from "@/lib/data/rows";
 import { getBrowserSupabase } from "@/lib/supabase/browser";
+import { subscribeChanges } from "./changes";
 
 // Shared simulation state (sim_state singleton), read with the anon key.
-// Step 2: one shared poller (every 3 s) while at least one component listens.
-// Step 4 adds Supabase Realtime on top, keeping this poll as the fallback (R6).
+// Refreshed on every sim_state change pushed by Realtime, or by the 2 s fallback poll (R6).
 
 export type SimStateStatus = "loading" | "ok" | "empty" | "error" | "unconfigured";
 
@@ -14,12 +14,11 @@ export interface SimStateSnapshot {
   state: SimStateRow | null;
 }
 
-const POLL_MS = 3000;
 const SERVER_SNAPSHOT: SimStateSnapshot = { status: "loading", state: null };
 
 let snapshot: SimStateSnapshot = SERVER_SNAPSHOT;
 const listeners = new Set<() => void>();
-let timer: number | null = null;
+let unsubscribeChanges: (() => void) | null = null;
 let inFlight: Promise<void> | null = null;
 
 function emit(next: SimStateSnapshot) {
@@ -66,13 +65,15 @@ export function subscribeSimState(listener: () => void): () => void {
   listeners.add(listener);
   if (listeners.size === 1) {
     void refreshSimState();
-    timer = window.setInterval(() => void refreshSimState(), POLL_MS);
+    unsubscribeChanges = subscribeChanges((source) => {
+      if (source === "sim_state" || source === "poll") void refreshSimState();
+    });
   }
   return () => {
     listeners.delete(listener);
-    if (listeners.size === 0 && timer !== null) {
-      window.clearInterval(timer);
-      timer = null;
+    if (listeners.size === 0 && unsubscribeChanges) {
+      unsubscribeChanges();
+      unsubscribeChanges = null;
     }
   };
 }
