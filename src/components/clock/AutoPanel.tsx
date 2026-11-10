@@ -109,7 +109,7 @@ export function AutoPanel() {
 
       <p className="border-t border-border pt-3 text-xs text-muted-foreground">
         {reference && reference.length > 0
-          ? `Trajectoire de référence (calculée au reset) : ${reference[reference.length - 1]} / 200 publiées à J${reference.length}. La courbe s'affichera dans la tour de contrôle (étape 6).`
+          ? `Trajectoire de référence (calculée au reset) : ${reference[reference.length - 1]} / 200 publiées à J${reference.length}. La courbe est affichée dans la tour de contrôle.`
           : "Trajectoire de référence absente : clique sur « Réinitialiser la démo » pour la calculer."}
       </p>
     </div>

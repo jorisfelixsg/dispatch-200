@@ -13,12 +13,12 @@ Démo en ligne : https://dispatch-200.vercel.app
 | E0 Accueil | Tous | Choix du profil (mémorisé dans le navigateur) |
 | E1 Mes tâches | Contributeurs (et l'orchestrateur si le renfort S1 est actif) | Budget du jour, liste ordonnée, bouton « Fait », déclaration d'absence |
 | E2 Tour de contrôle | Orchestrateur | Indicateurs, 5 contrôles de capacité et leurs niveaux, courbe réel/référence, projection, actions de rattrapage avec aperçu d'impact |
-| E3 Suivi des offres | Tous | Les 200 offres, étape par étape, recherche, filtres, export CSV |
-| E4 Horloge | Orchestrateur | +1h, +2h, jour suivant, aller au début de Jx, mode auto, reset |
-| E5 Équipe | Orchestrateur | Compétences, priorités, mode forcé, absences, heures exceptionnelles, actions appliquées (annulables) |
+| E3 Suivi des offres | Orchestrateur | Les 200 offres, étape par étape, recherche, filtres, export CSV |
+| E4 Simulation (démo) | Orchestrateur | +1h, +2h, jour suivant, aller au début de Jx, mode auto, reset. N'existe que pour la démo, signalé en pointillés |
+| E5 Organisation | Orchestrateur | Qui fait quoi (étapes × personnes, tâche majeure, priorités, charge et capacité du mois), mode forcé, absences, heures exceptionnelles, actions appliquées (annulables) |
 | E6 Journal | Orchestrateur | Tous les événements, filtrables par type |
 
-La barre du haut affiche l'horloge simulée, le niveau global (vert, orange, rouge) et les profils en ligne.
+Un contributeur ne voit que « Mes tâches ». La barre du haut affiche l'horloge simulée (en pointillés : c'est la démo) et, pour l'orchestrateur seulement, le niveau global (vert, orange, rouge) et les profils en ligne.
 
 ## Script de démo en 5 minutes
 
@@ -27,16 +27,16 @@ fenêtre de navigation privée, ou un téléphone). Chaque fenêtre garde son pr
 
 | Temps | Qui | Action | Ce qu'on montre |
 |---|---|---|---|
-| 0:00 | Orchestrateur | **Horloge › Réinitialiser la démo**, puis **Tour de contrôle** | 0 / 200, marges +540 / +120 / +600 / +240 / +360, niveau Vert, courbe de référence |
+| 0:00 | Orchestrateur | **Simulation › Réinitialiser la démo**, puis **Tour de contrôle** | 0 / 200, marges +540 / +120 / +600 / +240 / +360, niveau Vert, courbe de référence |
 | 0:30 | Alice, Bob, Charlie | Ouvrir **Mes tâches** | Trois listes différentes, sans doublon (Bob et Charlie se partagent les S1) |
 | 1:00 | Alice | **Fait** sur un S2 | Le S4 du même marchand apparaît chez Bob en moins de 2 s ; le budget d'Alice baisse de 3 min |
-| 1:30 | Orchestrateur | **Horloge › Jour suivant** | Les budgets reviennent à 60 min, en direct, chez chacun |
-| 2:00 | Orchestrateur | **Horloge › Réinitialiser la démo**, puis **Jouer jusqu'au début de J5** | Le mode auto joue J1 à J4 ; la tour montre 30 S3 faits, marge S3 +60, niveau Orange (l'exemple de la règle R9). Dans **Suivi des offres**, la colonne « S5 possible à partir de » affiche J5 09:51, J5 09:54… : la règle des 24h après S4 |
-| 2:45 | Charlie | **Déclarer une absence** pour J5, puis J6 | Marge S3 0, puis −60 ; S5 passe aussi en négatif : niveau **Rouge**, partout dans la barre du haut |
+| 1:30 | Orchestrateur | **Simulation › Jour suivant** | Les budgets reviennent à 60 min, en direct, chez chacun |
+| 2:00 | Orchestrateur | **Simulation › Réinitialiser la démo**, puis **Jouer jusqu'au début de J5** | Le mode auto joue J1 à J4 ; la tour montre 30 S3 faits, marge S3 +60, niveau Orange (l'exemple de la règle R9). Dans **Suivi des offres**, la colonne « S5 possible à partir de » affiche J5 09:51, J5 09:54… : la règle des 24h après S4 |
+| 2:45 | Charlie | **Déclarer une absence** pour J5, puis J6 | Marge S3 0, puis −60 ; S5 passe aussi en négatif : niveau **Rouge** dans la barre du haut de l'orchestrateur |
 | 3:15 | Orchestrateur | **Tour de contrôle** : **Projection à J22 › Calculer** | Sans réaction, la fin du mois tombe vers 180–190 offres publiées |
 | 3:30 | Orchestrateur | **Actions de rattrapage** | 4 actions proposées dans l'ordre, avec un aperçu d'impact. Le pire contrôle (S5) est partagé : choisir **Charlie**. Appliquer **Heure exceptionnelle** (Charlie, J7) : S3 −60 → 0. Appliquer **Renfort S1** : l'onglet « Mes tâches » apparaît pour l'orchestrateur |
-| 4:00 | Orchestrateur | **Équipe**, puis **Journal** | Les actions actives (annulables d'un clic) ; le journal trace actions, absences, horloge et étapes |
-| 4:30 | Orchestrateur | **Horloge › Jouer jusqu'au début de J23 (fin du mois)** | Avec les deux actions : **200 / 200** publiées (sans action : 190 / 200, l'absence de Charlie coûte 10 offres). Puis **Réinitialiser la démo** |
+| 4:00 | Orchestrateur | **Organisation**, puis **Journal** | Qui fait quoi et dans quel ordre, les absences, les actions actives (annulables d'un clic) ; le journal trace actions, absences, horloge et étapes |
+| 4:30 | Orchestrateur | **Simulation › Jouer jusqu'au début de J23 (fin du mois)** | Avec les deux actions : **200 / 200** publiées (sans action : 190 / 200, l'absence de Charlie coûte 10 offres). Puis **Réinitialiser la démo** |
 
 Le reset de 2:00 garantit un scénario reproductible : le mode auto utilise la graine 42, et même départ donne même
 résultat (les clics manuels faits avant changeraient légèrement le résultat final). Depuis l'état initial, sans absence, la fin du
@@ -147,7 +147,7 @@ compris. Pour une démo publique, renseigner `DEMO_ACCESS_CODE` : un code est al
 3. **Vercel** : « Add New › Project », importer le dépôt, renseigner les 4 variables d'environnement, puis
    « Deploy ». Vérifier que **Settings › Build and Deployment › Framework Preset** vaut **Next.js** (sinon : page
    404). Chaque push sur la branche principale redéploie.
-4. **Première initialisation** : ouvrir l'application, profil Orchestrateur, écran **Horloge**, puis
+4. **Première initialisation** : ouvrir l'application, profil Orchestrateur, écran **Simulation**, puis
    **Réinitialiser la démo**. Les 200 offres fictives sont créées (toujours les mêmes) et la trajectoire de
    référence est calculée.
 
@@ -156,7 +156,7 @@ compris. Pour une démo publique, renseigner `DEMO_ACCESS_CODE` : un code est al
 - **Réactiver Supabase** : un projet gratuit se met en pause après une période d'inactivité. Si l'application affiche
   « Base de données injoignable », ouvrir le tableau de bord Supabase, choisir le projet, cliquer sur
   « Restore project » (quelques minutes), puis recharger.
-- **Repartir de zéro** : **Horloge › Réinitialiser la démo**. Chaque navigateur garde son profil.
+- **Repartir de zéro** : **Simulation › Réinitialiser la démo**. Chaque navigateur garde son profil.
 - **Préchauffer** : quelques minutes avant, ouvrir l'application et faire un tour des écrans (un « Fait », puis un
   reset). Le premier appel après une longue pause est plus lent ; ensuite, une étape validée apparaît chez les autres
   en environ 1 s.

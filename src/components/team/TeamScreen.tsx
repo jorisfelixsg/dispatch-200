@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Loader2, Undo2 } from "lucide-react";
 import { useSimState } from "@/hooks/useSimState";
 import { useTeamData, type AppliedActionView } from "@/hooks/useTeamData";
-import { BUSINESS_DAYS } from "@/lib/engine/config";
+import { BUSINESS_DAYS, DURATIONS, OFFER_COUNT, STEPS, type Step } from "@/lib/engine/config";
 import { businessDayOf } from "@/lib/engine/clock";
 import type { PersonId } from "@/lib/engine/people";
 import { formatSimShort, SIM_START } from "@/lib/engine/time";
@@ -13,6 +13,7 @@ import type { AbsenceResponse } from "@/lib/live/contracts";
 import { cancelActionRequest } from "@/lib/live/actionsClient";
 import { renfortFromRow } from "@/lib/data/rows";
 import { ACTION_TITLES, describeAction } from "@/lib/ui/actionLabels";
+import { STEP_NAMES, STEP_PREREQUISITES } from "@/lib/ui/steps";
 import { PersonAvatar } from "@/components/PersonAvatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -93,20 +94,6 @@ function PersonCard({ person, adjustments, today }: { person: Person; adjustment
 
       {contributor && (
         <dl className="grid gap-x-4 gap-y-1.5 text-sm sm:grid-cols-[10rem_minmax(0,1fr)]">
-          <dt className="text-muted-foreground">Compétences</dt>
-          <dd className="flex flex-wrap gap-1">
-            {person.skills.map((s) => (
-              <Badge key={s} variant={s === person.majorStep ? "default" : "outline"}>
-                {s}
-              </Badge>
-            ))}
-          </dd>
-          <dt className="text-muted-foreground">Tâche majeure</dt>
-          <dd>{person.majorStep ?? "—"}</dd>
-          <dt className="text-muted-foreground">Ordre de priorité</dt>
-          <dd className="font-mono text-xs">
-            {person.id === "alice" ? "S2 puis S1 du même marchand" : person.priorityOrder.join(" > ")}
-          </dd>
           <dt className="text-muted-foreground">Mode forcé</dt>
           <dd>{person.forcedMode ? `Oui, une tâche à la fois : ${person.forcedSequence.join(" puis ")}` : "Non"}</dd>
           <dt className="text-muted-foreground">Absences déclarées</dt>
@@ -120,6 +107,95 @@ function PersonCard({ person, adjustments, today }: { person: Person; adjustment
 
       {contributor && <DeclareAbsence personId={person.id} today={today} declared={declared} />}
     </li>
+  );
+}
+
+const minutes = (n: number) => `${n.toLocaleString("fr-FR")} min`;
+
+/** Who does which step, in which order: the answer to "how is the team organised". */
+function OrganisationTable({ people, renfortActive }: { people: Person[]; renfortActive: boolean }) {
+  const contributors = people.filter((p) => p.role === "contributor");
+  const trained = (step: Step) => contributors.filter((p) => p.skills.includes(step));
+  const totalLoad = STEPS.reduce((sum, step) => sum + OFFER_COUNT * DURATIONS[step], 0);
+  const capacity = (p: Person) => p.dailyBudgetMin * BUSINESS_DAYS;
+  const totalCapacity = contributors.reduce((sum, p) => sum + capacity(p), 0);
+  const single = STEPS.filter((step) => trained(step).length === 1);
+  const shared = STEPS.filter((step) => trained(step).length > 1);
+  const list = (steps: readonly Step[]) =>
+    steps.length <= 1 ? steps.join("") : `${steps.slice(0, -1).join(", ")} et ${steps[steps.length - 1]}`;
+
+  const cell = (p: Person, step: Step) => {
+    if (!p.skills.includes(step)) return <span className="text-muted-foreground">—</span>;
+    if (step === p.majorStep) return <Badge>Tâche majeure</Badge>;
+    const rank = p.priorityOrder.indexOf(step);
+    return <span className="text-sm">{rank >= 0 ? `Priorité ${rank + 1}` : "Oui"}</span>;
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="overflow-x-auto rounded-xl border border-border bg-card">
+        <table className="w-full min-w-[44rem] text-sm">
+          <thead className="bg-muted/60 text-left text-xs uppercase tracking-wide text-muted-foreground">
+            <tr>
+              <th className="px-4 py-2.5 font-medium">Étape</th>
+              <th className="px-4 py-2.5 font-medium">Après</th>
+              <th className="px-4 py-2.5 text-right font-medium">Charge du mois</th>
+              {contributors.map((p) => (
+                <th key={p.id} className="px-4 py-2.5 font-medium">
+                  <span className="flex items-center gap-2 normal-case tracking-normal text-foreground">
+                    <PersonAvatar id={p.id} name={p.name} className="size-6 text-[10px]" />
+                    {p.name}
+                  </span>
+                </th>
+              ))}
+              {renfortActive && <th className="px-4 py-2.5 font-medium normal-case tracking-normal text-foreground">Renfort</th>}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {STEPS.map((step) => (
+              <tr key={step}>
+                <td className="px-4 py-2.5">
+                  <span className="font-mono font-medium">{step}</span> · {STEP_NAMES[step]}
+                  <span className="block text-xs text-muted-foreground">{DURATIONS[step]} min par offre</span>
+                </td>
+                <td className="px-4 py-2.5 text-muted-foreground">{STEP_PREREQUISITES[step]}</td>
+                <td className="px-4 py-2.5 text-right tabular-nums">{minutes(OFFER_COUNT * DURATIONS[step])}</td>
+                {contributors.map((p) => (
+                  <td key={p.id} className="px-4 py-2.5">
+                    {cell(p, step)}
+                  </td>
+                ))}
+                {renfortActive && (
+                  <td className="px-4 py-2.5">
+                    {step === "S1" ? <Badge variant="orange">Renfort</Badge> : <span className="text-muted-foreground">—</span>}
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+          <tfoot className="border-t border-border bg-muted/30">
+            <tr>
+              <td className="px-4 py-2.5 font-medium" colSpan={2}>
+                Total sur {BUSINESS_DAYS} jours ouvrés
+              </td>
+              <td className="px-4 py-2.5 text-right font-medium tabular-nums">{minutes(totalLoad)}</td>
+              {contributors.map((p) => (
+                <td key={p.id} className="px-4 py-2.5 tabular-nums text-muted-foreground">
+                  {minutes(capacity(p))} dispo
+                </td>
+              ))}
+              {renfortActive && <td className="px-4 py-2.5" />}
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <p className="max-w-3xl text-sm text-muted-foreground">
+        Charge totale {minutes(totalLoad)} pour {minutes(totalCapacity)} disponibles ({contributors.length} personnes × 60 min ×{" "}
+        {BUSINESS_DAYS} jours), soit {minutes(totalCapacity - totalLoad)} de marge.
+        {single.length > 0 && <> {list(single)} n&apos;ont chacune qu&apos;une personne formée : ce sont leurs tâches majeures.</>}
+        {shared.length > 0 && <> {list(shared)}, partagées, passent après la tâche majeure.</>}
+      </p>
+    </div>
   );
 }
 
@@ -157,7 +233,7 @@ function ActionRow({ action }: { action: AppliedActionView }) {
   );
 }
 
-/** E5 — Équipe et paramètres (orchestrator). */
+/** E5 — L'organisation (orchestrator): who does what, absences, extra hours and applied actions. */
 export function TeamScreen() {
   const team = useTeamData();
   const { state: sim } = useSimState();
@@ -167,7 +243,7 @@ export function TeamScreen() {
   if (team.status !== "ready") {
     return (
       <section className="space-y-4">
-        <h1 className="text-2xl font-semibold">Équipe et paramètres</h1>
+        <h1 className="text-2xl font-semibold">L&apos;organisation</h1>
         {team.status === "error" ? (
           <p role="alert" className="rounded-md border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
             Impossible de lire l&apos;équipe : {team.message}
@@ -184,7 +260,15 @@ export function TeamScreen() {
   const { people, adjustments, actions } = team.data;
   return (
     <section className="space-y-6">
-      <h1 className="text-2xl font-semibold">Équipe et paramètres</h1>
+      <div className="space-y-1">
+        <h1 className="text-2xl font-semibold">L&apos;organisation</h1>
+        <p className="max-w-3xl text-sm text-muted-foreground">
+          Qui fait quoi, et dans quel ordre. Chacun donne 1h par jour au moment qu&apos;il choisit ; « Mes tâches » lui
+          propose ses étapes dans cet ordre de priorité.
+        </p>
+      </div>
+
+      <OrganisationTable people={people} renfortActive={renfort.active} />
 
       <div className="rounded-xl border border-border bg-card p-4 text-sm">
         <p className="font-medium">Renfort externe sur S1</p>
@@ -195,6 +279,7 @@ export function TeamScreen() {
         </p>
       </div>
 
+      <h2 className="text-lg font-semibold">Disponibilités</h2>
       <ul className="grid gap-3 lg:grid-cols-2">
         {people
           .filter((p) => p.role === "contributor")

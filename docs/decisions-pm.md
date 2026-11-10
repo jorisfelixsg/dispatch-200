@@ -10,6 +10,15 @@ Ces décisions ont été prises pendant la construction du MVP (2026-11-09 et 20
 | Section « Autres tâches possibles » (E1, US-13, R8) | Retirée | Pas de tâche hors priorités ; l'événement OUT_OF_PRIORITY n'est plus produit |
 | Mode auto : « Jouer la journée en cours » et champ graine (E4) | Retirés | L'écran Horloge ne propose que « Jouer jusqu'au début de Jx », avec la graine 42 fixe |
 
+| Écran E3 « Suivi des offres » pour les contributeurs (section 4) | Retiré le 2026-11-10 : un contributeur ne voit plus que « Mes tâches » | E3 reste pour l'orchestrateur |
+| Niveau global et profils « En ligne » dans la barre du haut des contributeurs (section 4, US-20) | Retirés le 2026-11-10 : ils ne peuvent pas agir dessus | Visibles par l'orchestrateur seulement |
+
+## Présentation (2026-11-10)
+
+- **Simulation** : l'écran E4 s'appelle « Simulation », porte l'étiquette « Démo », et est séparé des écrans du produit dans la navigation. L'horloge simulée est encadrée en pointillés, code visuel de tout ce qui n'existe que pour la démo.
+- **Organisation** : l'écran E5 s'appelle « L'organisation » et commence par un tableau étapes × personnes (tâche majeure, priorités, charge et capacité du mois). C'est la réponse visuelle à « qui fait quoi ».
+- **Audit de périmètre, recommandations non retenues** : tour de contrôle simplifiée, retrait de « Forcer l'ordre », retrait du Journal de la navigation, retrait du badge « majeure / secondaire ». Tout cela reste en place.
+
 ## Précisions de règles
 
 - **R5, parcours d'Alice** : un marchand reste dans son parcours tant que S2 **et** S1 ne sont pas faits. La lecture littérale (« marchand sans S2 ») faisait échouer le test des 50 graines vers 170 offres publiées ; la lecture retenue passe 50/50.
