@@ -8,8 +8,7 @@ Ces décisions ont été prises pendant la construction du MVP (2026-11-09 et 20
 |---|---|---|
 | Action de rattrapage n° 3 « Former un remplaçant » (R11, US-10) | Retirée : Alice n'a jamais été formée sur S3 | Plus que 4 actions de rattrapage. L'exemple « remplaçant » de R9 et le critère d'US-10 qui s'appuie dessus ne s'appliquent plus |
 | Section « Autres tâches possibles » (E1, US-13, R8) | Retirée | Pas de tâche hors priorités ; l'événement OUT_OF_PRIORITY n'est plus produit |
-| Mode auto : « Jouer la journée en cours » et champ graine (E4) | Retirés | L'écran Horloge ne propose que « Jouer jusqu'au début de Jx », avec la graine 42 fixe |
-
+| Mode auto : « Jouer la journée en cours » et champ graine (E4) | Retirés | L'écran Simulation (ex-Horloge) ne propose que « Jouer jusqu'au début de Jx », avec la graine 42 fixe |
 | Écran E3 « Suivi des offres » pour les contributeurs (section 4) | Retiré le 2026-11-10 : un contributeur ne voit plus que « Mes tâches » | E3 reste pour l'orchestrateur |
 | Niveau global et profils « En ligne » dans la barre du haut des contributeurs (section 4, US-20) | Retirés le 2026-11-10 : ils ne peuvent pas agir dessus | Visibles par l'orchestrateur seulement |
 
