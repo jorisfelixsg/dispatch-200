@@ -7,17 +7,19 @@ export interface NavItem {
   /** Screen code from spec section 4. */
   code: string;
   roles: Role[];
+  /** Demo scaffolding (simulated time, auto mode, reset), shown apart from the product screens. */
+  demo?: boolean;
 }
 
-// Screen map (spec section 4). A contributor sees E1 and E3; the orchestrator sees E2 to E6,
-// and E1 when the "Renfort S1" action is active (R11 action 2).
+// Screen map (spec section 4, adjusted by the PM on 2026-11-10). A contributor sees only E1. The
+// orchestrator sees E2, E3, E5, E6 and the E4 simulation screen, plus E1 when "Renfort S1" is active.
 export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/tasks", label: "Mes tâches", code: "E1", roles: ["contributor"] },
   { href: "/control", label: "Tour de contrôle", code: "E2", roles: ["orchestrator"] },
-  { href: "/offers", label: "Suivi des offres", code: "E3", roles: ["contributor", "orchestrator"] },
-  { href: "/clock", label: "Horloge", code: "E4", roles: ["orchestrator"] },
-  { href: "/team", label: "Équipe", code: "E5", roles: ["orchestrator"] },
+  { href: "/offers", label: "Suivi des offres", code: "E3", roles: ["orchestrator"] },
+  { href: "/team", label: "Organisation", code: "E5", roles: ["orchestrator"] },
   { href: "/log", label: "Journal", code: "E6", roles: ["orchestrator"] },
+  { href: "/clock", label: "Simulation", code: "E4", roles: ["orchestrator"], demo: true },
 ];
 
 export interface NavOptions {
