@@ -13,7 +13,7 @@ import { HealthNotice } from "./HealthNotice";
 import { PersonAvatar, personColor } from "./PersonAvatar";
 
 function describe(person: PersonDefaults): string {
-  if (person.role === "orchestrator") return "Tour de contrôle, horloge, équipe, journal";
+  if (person.role === "orchestrator") return "Tour de contrôle, suivi des offres, organisation, journal et simulation";
   return `Contributeur · tâche majeure ${person.majorStep}`;
 }
 
@@ -48,7 +48,7 @@ export function HomeScreen() {
             {OFFER_COUNT} offres marchands à publier en {BUSINESS_DAYS} jours ouvrés. L&apos;outil répartit les
             tâches au fil de l&apos;eau : chacun voit ce qui est le plus utile maintenant.
           </p>
-          <div className="inline-flex items-center gap-2 rounded-md bg-card px-3 py-1.5 font-mono text-sm tabular-nums shadow-sm ring-1 ring-border">
+          <div className="inline-flex items-center gap-2 rounded-md border border-dashed border-muted-foreground/50 bg-card px-3 py-1.5 font-mono text-sm tabular-nums shadow-sm">
             <Clock className="size-4 text-muted-foreground" aria-hidden />
             <span className="font-sans text-muted-foreground">Horloge simulée</span>
             <span>{formatSim(nowSim)}</span>
