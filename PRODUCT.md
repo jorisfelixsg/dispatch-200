@@ -31,13 +31,13 @@ Succès : les 200 offres publiées avant la fin du mois, sans que personne n'ait
 
 - Réponse du PM au cas pratique de recrutement Joko « Offer creation » : proposer une organisation de l'équipe et un outil avec son processus. L'énoncé n'est pas recopié dans ce dépôt public. L'évaluateur attend du pragmatisme, une présentation claire de la démarche, pas de sur-ingénierie, et une explication de l'usage de l'IA.
 - Présentation : en visio, le PM partage son écran et pilote lui-même 4 fenêtres (l'orchestrateur et les 3 contributeurs). Le rendu passe par la compression vidéo et une taille d'affichage réduite. Le script de démo de 5 minutes est dans README.md.
-- Usage visé d'un contributeur : sur ordinateur, la fiche à côté du back-office ; la mini-fenêtre (Document Picture-in-Picture, Chrome et Edge) reste au premier plan au-dessus du back-office.
+- Usage visé d'un contributeur : sur ordinateur, la fiche à côté du back-office.
 - Horloge simulée partagée (J1 à J22, 08:00 à 19:00, jours ouvrés), pilotée par l'orchestrateur depuis l'écran Simulation. Mode auto pour jouer des journées (graine 42), bouton de réinitialisation.
 - Données fictives : 200 marchands générés par une graine déterministe. Pas de connexion au backend Joko.
 
 ## Capabilities and Constraints
 
-- Écrans : E0 Accueil (choix du profil), E1 Mes tâches (une seule carte, fiche d'exécution, « Fait » puis « Annuler » pendant 2 s, mini-fenêtre, déclaration d'absence), E2 Tour de contrôle (verdict, « Que faire ? », schéma du parcours d'une offre, équipe du jour, rythme), E3 Suivi des offres, E4 Simulation (démo), E5 L'organisation, E6 Journal. Un contributeur ne voit que « Mes tâches ».
+- Écrans : E0 Accueil (choix du profil), E1 Mes tâches (une seule carte, fiche d'exécution, « Fait » puis « Annuler » pendant 2 s, déclaration d'absence), E2 Tour de contrôle (verdict, « Que faire ? », schéma du parcours d'une offre, équipe du jour, rythme), E3 Suivi des offres, E4 Simulation (démo), E5 L'organisation, E6 Journal. Un contributeur ne voit que « Mes tâches ».
 - Actions de rattrapage proposées, dans cet ordre : Renfort S1, Heure exceptionnelle.
 - Niveaux globaux : Vert, Orange, Rouge.
 - Code visuel établi : tout ce qui n'existe que pour la démo (horloge simulée, écran Simulation) est signalé en pointillés et porte l'étiquette « Démo ».

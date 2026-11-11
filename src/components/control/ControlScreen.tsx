@@ -10,7 +10,6 @@ import { LEVEL_LABEL } from "@/components/LevelPill";
 import { cn } from "@/lib/utils";
 import { ActionsPanel } from "./ActionsPanel";
 import { FlowDiagram } from "./FlowDiagram";
-import { ProgressChart } from "./ProgressChart";
 import { RhythmCard } from "./RhythmCard";
 import { TeamToday } from "./TeamToday";
 import { TowerHero } from "./TowerHero";
@@ -49,13 +48,13 @@ function LevelBadge({ level }: { level: Level }) {
   );
 }
 
-/** R9 table (minutes), R10 thresholds and the full US-15 curve: folded under « Détail des calculs ». */
+/** R9 table (minutes) and R10 thresholds, folded under « Détail des calculs ». The US-15 curve is in « Le rythme ». */
 function CalculationDetails({ payload }: { payload: ControlPayload }) {
   const { controls } = payload;
   return (
     <details className="group rounded-2xl border border-dashed border-border bg-card">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-2 p-4 text-sm text-muted-foreground [&::-webkit-details-marker]:hidden">
-        <span>Détail des calculs : contrôles en minutes, seuils des niveaux, courbe complète</span>
+        <span>Détail des calculs : contrôles en minutes, seuils des niveaux</span>
         <ChevronRight className="size-4 transition-transform group-open:rotate-90" aria-hidden />
       </summary>
       <div className="space-y-6 border-t border-border p-4">
@@ -130,14 +129,6 @@ function CalculationDetails({ payload }: { payload: ControlPayload }) {
               </li>
             ))}
           </ul>
-        </div>
-
-        <div className="space-y-2">
-          <h3 className="font-semibold">Offres publiées cumulées : réel et référence</h3>
-          {payload.referenceCurve ? null : (
-            <p className="text-sm text-muted-foreground">Trajectoire de référence absente : réinitialise la démo (écran Simulation) pour la calculer.</p>
-          )}
-          <ProgressChart actual={payload.actualCurve} reference={payload.referenceCurve} />
         </div>
       </div>
     </details>

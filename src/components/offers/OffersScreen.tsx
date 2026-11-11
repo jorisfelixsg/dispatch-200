@@ -3,7 +3,7 @@
 import { useDeferredValue, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Check, Download, Search } from "lucide-react";
+import { Check, Search } from "lucide-react";
 import { useOffersData } from "@/hooks/useOffersData";
 import { useProfile } from "@/hooks/useProfile";
 import { useSimState } from "@/hooks/useSimState";
@@ -21,8 +21,6 @@ import { formatSimShort, SIM_START } from "@/lib/engine/time";
 import type { Offer, Person } from "@/lib/engine/types";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { downloadCsv, toCsv } from "@/lib/ui/csv";
 
 type Filter = "all" | "published" | "waiting24h" | `pending:${Step}`;
 
@@ -89,39 +87,15 @@ export function OffersScreen() {
 
   const publishedCount = rows.filter((r) => r.phase === "published").length;
 
-  // US-19 — export of the rows currently shown (search and filter applied).
-  const exportCsv = () => {
-    const header = ["Rang", "Marchand", "Catégorie", "Importance", ...STEPS.flatMap((s) => [`${s} fait par`, `${s} fin`]), "S5 possible à partir de", "Statut"];
-    const lines = visible.map((r) => [
-      r.offer.rank,
-      r.offer.merchantName,
-      r.offer.category,
-      r.offer.importance,
-      ...STEPS.flatMap((s) => {
-        const e = r.steps[s];
-        return e ? [names.get(e.doneBy) ?? e.doneBy, formatSimShort(e.doneAtSim)] : ["", ""];
-      }),
-      r.s5At !== null ? formatSimShort(r.s5At) : "",
-      PHASE_LABEL[r.phase].label,
-    ]);
-    downloadCsv("suivi-des-offres.csv", toCsv(header, lines));
-  };
   const isOrchestrator = profile ? getDefaultPerson(profile).role === "orchestrator" : false;
 
   return (
     <section className="space-y-4">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">Suivi des offres</h1>
-          <p className="text-sm text-muted-foreground">
-            {data.status === "ready" ? `${publishedCount} / ${rows.length} publiées` : "Chargement…"}
-          </p>
-        </div>
-        {data.status === "ready" && rows.length > 0 && (
-          <Button variant="outline" onClick={exportCsv} disabled={visible.length === 0}>
-            <Download aria-hidden /> Exporter en CSV
-          </Button>
-        )}
+      <header>
+        <h1 className="text-2xl font-semibold">Suivi des offres</h1>
+        <p className="text-sm text-muted-foreground">
+          {data.status === "ready" ? `${publishedCount} / ${rows.length} publiées` : "Chargement…"}
+        </p>
       </header>
 
       <div className="flex flex-col gap-2 sm:flex-row">
@@ -264,7 +238,7 @@ function MerchantCell({ offer }: { offer: Offer }) {
           {offer.merchantName}
         </p>
         <p className="truncate text-xs text-muted-foreground">
-          {offer.category} · <span title="Importance">{offer.importance}</span>
+          {offer.category}
         </p>
       </div>
     </div>

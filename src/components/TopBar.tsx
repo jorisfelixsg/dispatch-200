@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Clock, LogOut } from "lucide-react";
 import { useControlReport } from "@/hooks/useControlReport";
-import { usePresence } from "@/hooks/usePresence";
 import { useProfile } from "@/hooks/useProfile";
 import { useSimClock } from "@/hooks/useSimClock";
 import { useSimState } from "@/hooks/useSimState";
@@ -19,21 +18,6 @@ import { PersonAvatar } from "./PersonAvatar";
 function GlobalLevel() {
   const control = useControlReport();
   return <LevelPill level={control.payload?.level ?? null} />;
-}
-
-function OnlineProfiles({ online }: { online: PersonId[] }) {
-  return (
-    <div className="flex items-center gap-1.5" aria-label={`En ligne : ${online.map((id) => getDefaultPerson(id).name).join(", ")}`}>
-      <span className="text-xs text-muted-foreground">En ligne</span>
-      <span className="flex -space-x-1.5">
-        {online.map((id) => (
-          <span key={id} title={getDefaultPerson(id).name} className="rounded-full ring-2 ring-card">
-            <PersonAvatar id={id} name={getDefaultPerson(id).name} className="size-6 text-[10px]" />
-          </span>
-        ))}
-      </span>
-    </div>
-  );
 }
 
 function NavLink({ item, active }: { item: NavItem; active: boolean }) {
@@ -61,8 +45,6 @@ export function TopBar({ profile }: { profile: PersonId }) {
   const orchestrator = person.role === "orchestrator";
   const { nowSim } = useSimClock();
   const { setProfile } = useProfile();
-  // Every profile announces its presence; only the orchestrator sees who is online.
-  const online = usePresence(profile);
   const pathname = usePathname();
   const router = useRouter();
   const { state: sim } = useSimState();
@@ -94,7 +76,6 @@ export function TopBar({ profile }: { profile: PersonId }) {
         </div>
 
         {orchestrator && <GlobalLevel />}
-        {orchestrator && online && online.length > 0 && <OnlineProfiles online={online} />}
 
         <button
           type="button"

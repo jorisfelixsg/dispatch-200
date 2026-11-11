@@ -1,17 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Loader2, PictureInPicture2 } from "lucide-react";
+import { useCallback, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { useDeferredDone } from "@/hooks/useDeferredDone";
 import { useProfile } from "@/hooks/useProfile";
 import { useTaskList } from "@/hooks/useTaskList";
 import type { EmptyReason } from "@/lib/engine/taskList";
 import type { TaskView } from "@/lib/live/contracts";
 import { STEP_NAMES } from "@/lib/ui/taskKit";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { AbsencePanel } from "./AbsencePanel";
-import { useMiniWindow, useMiniWindowSupported } from "./MiniWindow";
 import { TaskCard } from "./TaskCard";
 
 const keyOf = (t: TaskView) => `${t.offerId}:${t.step}`;
@@ -47,7 +45,7 @@ function nextHint(current: TaskView, next: TaskView | undefined): string {
   return `Ensuite : ${STEP_NAMES[next.step].toLowerCase()}.`;
 }
 
-/** E1 — « Mes tâches » v2 (PM decision 2026-11-11): one card at a time, its execution kit, undo, mini window. */
+/** E1 — « Mes tâches » v2 (PM decision 2026-11-11): one card at a time, its execution kit, undo. */
 export function TasksScreen() {
   const { profile } = useProfile();
   const { state, markDone, declareAbsence } = useTaskList(profile);
@@ -57,8 +55,6 @@ export function TasksScreen() {
     [],
   );
   const { pending, done, undo } = useDeferredDone(markDone, onError);
-  const mini = useMiniWindow();
-  const miniSupported = useMiniWindowSupported();
 
   const payload = state.status === "ready" ? state.payload : null;
   const pendingKey = pending ? keyOf(pending) : null;
@@ -74,29 +70,6 @@ export function TasksScreen() {
     setFeedback(null);
     done(current);
   };
-  // The keyboard listener always calls the latest validate().
-  const validateRef = useRef(validate);
-  useEffect(() => {
-    validateRef.current = validate;
-  });
-
-  // Entrée = Fait, Ctrl+Z = Annuler, in the page and in the mini window.
-  useEffect(() => {
-    const docs = [document, mini.pip?.document].filter((d): d is Document => Boolean(d));
-    const onKey = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (target?.closest("input, textarea, select, [contenteditable]")) return;
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
-        e.preventDefault();
-        undo();
-      } else if (e.key === "Enter" && !target?.closest("button, a")) {
-        e.preventDefault();
-        validateRef.current();
-      }
-    };
-    docs.forEach((d) => d.addEventListener("keydown", onKey));
-    return () => docs.forEach((d) => d.removeEventListener("keydown", onKey));
-  }, [undo, mini.pip]);
 
   if (state.status === "loading") {
     return (
@@ -139,15 +112,7 @@ export function TasksScreen() {
   return (
     <section className="mx-auto max-w-2xl space-y-4">
       <header className="space-y-2">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h1 className="text-2xl font-semibold">Mes tâches</h1>
-          {miniSupported && (
-            <Button variant="outline" size="sm" className="h-11 sm:h-9" onClick={() => void (mini.pip ? mini.close() : mini.open())}>
-              <PictureInPicture2 aria-hidden />
-              {mini.pip ? "Fermer la mini-fenêtre" : "Ouvrir la mini-fenêtre"}
-            </Button>
-          )}
-        </div>
+        <h1 className="text-2xl font-semibold">Mes tâches</h1>
         <p className="text-sm text-muted-foreground" aria-live="polite">
           {summary}
         </p>
@@ -182,22 +147,6 @@ export function TasksScreen() {
       {current && !pending && <p className="text-sm text-muted-foreground">{nextHint(current, tasks[1])}</p>}
 
       {profile !== "orchestrator" && <AbsencePanel today={payload.dayIndex} absences={payload.absences} onDeclare={declareAbsence} />}
-
-      {mini.render(
-        <div className="grid gap-2 p-3">
-          {banner}
-          {current ? (
-            <TaskCard key={keyOf(current)} task={current} onDone={validate} onUndo={pending ? undo : undefined} disabled={disabled} compact />
-          ) : (
-            <p className="rounded-lg border border-dashed border-border p-4 text-sm">
-              <span className="font-medium">{empty.title}</span>
-              <br />
-              <span className="text-muted-foreground">{empty.detail}</span>
-            </p>
-          )}
-          <p className="text-center text-xs text-muted-foreground">{summary}</p>
-        </div>,
-      )}
     </section>
   );
 }

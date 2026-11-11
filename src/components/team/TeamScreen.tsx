@@ -89,13 +89,10 @@ function PersonCard({ person, adjustments, today }: { person: Person; adjustment
           <p className="font-semibold">{person.name}</p>
           <p className="text-xs text-muted-foreground">{contributor ? `Budget ${person.dailyBudgetMin} min par jour` : "Aucune tâche par défaut"}</p>
         </div>
-        {person.forcedMode && <Badge variant="orange" className="ml-auto">Mode forcé : {person.forcedSequence.join(" puis ")}</Badge>}
       </div>
 
       {contributor && (
         <dl className="grid gap-x-4 gap-y-1.5 text-sm sm:grid-cols-[10rem_minmax(0,1fr)]">
-          <dt className="text-muted-foreground">Mode forcé</dt>
-          <dd>{person.forcedMode ? `Oui, une tâche à la fois : ${person.forcedSequence.join(" puis ")}` : "Non"}</dd>
           <dt className="text-muted-foreground">Absences déclarées</dt>
           <dd>{days(declared)}</dd>
           <dt className="text-muted-foreground">Absences détectées</dt>

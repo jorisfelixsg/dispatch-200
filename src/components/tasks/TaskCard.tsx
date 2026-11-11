@@ -18,7 +18,7 @@ async function writeClipboard(text: string, doc: Document): Promise<boolean> {
 }
 
 /** One field of the execution kit, with a one-click copy. */
-function KitRow({ field, compact }: { field: KitField; compact: boolean }) {
+function KitRow({ field }: { field: KitField }) {
   const [copied, setCopied] = useState(false);
 
   const copy = async (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -29,22 +29,6 @@ function KitRow({ field, compact }: { field: KitField; compact: boolean }) {
       window.setTimeout(() => setCopied(false), 1200);
     }
   };
-
-  if (compact) {
-    return (
-      <button
-        type="button"
-        onClick={(e) => void copy(e)}
-        className="flex min-h-9 w-full min-w-0 items-center justify-between gap-2 rounded-md border border-border bg-background px-2 text-left text-xs"
-      >
-        <span className="truncate">
-          <span className="text-muted-foreground">{field.label} · </span>
-          {field.value}
-        </span>
-        <span className={cn("shrink-0 font-semibold", copied ? "text-ok" : "text-primary")}>{copied ? "Copié" : "Copier"}</span>
-      </button>
-    );
-  }
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 rounded-lg border border-border px-3 py-2">
@@ -62,7 +46,7 @@ function KitRow({ field, compact }: { field: KitField; compact: boolean }) {
 }
 
 /**
- * Piste 1 + 2 — the single task card with its execution kit. `compact` is the mini-window version.
+ * Piste 1 + 2 — the single task card with its execution kit.
  * With `onUndo`, the task was just marked done: the card stays, « Annuler » replaces « Fait ».
  */
 export function TaskCard({
@@ -70,28 +54,18 @@ export function TaskCard({
   onDone,
   onUndo,
   disabled,
-  compact = false,
 }: {
   task: TaskView;
   onDone: () => void;
   onUndo?: () => void;
   disabled: boolean;
-  compact?: boolean;
 }) {
   const kit = taskKit(task);
-  const fields = compact ? kit.fields.filter((f) => f.kind !== "image").slice(0, 3) : kit.fields;
 
   return (
-    <div className={cn("grid gap-3", !compact && "rounded-2xl border border-border bg-card p-4 sm:p-5")}>
+    <div className="grid gap-3 rounded-2xl border border-border bg-card p-4 sm:p-5">
       <div className="flex min-w-0 items-center gap-3">
-        <Image
-          src={task.logoUrl}
-          alt=""
-          width={52}
-          height={52}
-          unoptimized
-          className={cn("shrink-0 rounded-xl", compact ? "size-9" : "size-13")}
-        />
+        <Image src={task.logoUrl} alt="" width={52} height={52} unoptimized className="size-13 shrink-0 rounded-xl" />
         <div className="grid min-w-0">
           <span className="flex flex-wrap items-center gap-2 font-mono text-xs font-semibold text-primary">
             {task.step} · {STEP_NAMES[task.step]}
@@ -101,18 +75,18 @@ export function TaskCard({
               </span>
             )}
           </span>
-          <span className={cn("truncate font-semibold", compact ? "text-base" : "text-xl")}>{task.merchantName}</span>
-          {!compact && <span className="text-sm text-muted-foreground">{whyItMatters(task.step)}</span>}
+          <span className="truncate text-xl font-semibold">{task.merchantName}</span>
+          <span className="text-sm text-muted-foreground">{whyItMatters(task.step)}</span>
         </div>
       </div>
 
-      <div className={cn("grid", compact ? "gap-1.5" : "gap-2")}>
-        {fields.map((f) => (
-          <KitRow key={f.label} field={f} compact={compact} />
+      <div className="grid gap-2">
+        {kit.fields.map((f) => (
+          <KitRow key={f.label} field={f} />
         ))}
       </div>
 
-      {!compact && kit.checklist.length > 0 && (
+      {kit.checklist.length > 0 && (
         <ul className="grid gap-1 text-sm">
           {kit.checklist.map((item) => (
             <li key={item}>
@@ -125,12 +99,11 @@ export function TaskCard({
       )}
 
       {onUndo ? (
-        <UndoButton onUndo={onUndo} compact={compact} />
+        <UndoButton onUndo={onUndo} />
       ) : (
-        <Button onClick={onDone} disabled={disabled} className={cn("w-full", compact ? "h-11" : "h-13 text-base")}>
+        <Button onClick={onDone} disabled={disabled} className="h-13 w-full text-base">
           <Check aria-hidden />
-          {compact ? "Fait, suivante" : "Fait"}
-          <kbd className="ml-1 rounded border border-current px-1.5 font-mono text-[10px] opacity-70">Entrée</kbd>
+          Fait
         </Button>
       )}
     </div>
@@ -138,15 +111,12 @@ export function TaskCard({
 }
 
 /** « Annuler » button that drains like a red progress bar, then disappears (PM: 2 s). */
-export function UndoButton({ onUndo, compact = false }: { onUndo: () => void; compact?: boolean }) {
+export function UndoButton({ onUndo }: { onUndo: () => void }) {
   return (
     <button
       type="button"
       onClick={onUndo}
-      className={cn(
-        "relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-lg border border-danger/40 bg-card font-semibold text-danger",
-        compact ? "h-11 text-sm" : "h-13 text-base",
-      )}
+      className="relative flex h-13 w-full items-center justify-center gap-2 overflow-hidden rounded-lg border border-danger/40 bg-card text-base font-semibold text-danger"
     >
       <span
         aria-hidden

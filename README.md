@@ -11,11 +11,11 @@ Démo en ligne : https://dispatch-200.vercel.app
 | Écran | Qui | Contenu |
 |---|---|---|
 | E0 Accueil | Tous | Choix du profil (mémorisé dans le navigateur) |
-| E1 Mes tâches | Contributeurs (et l'orchestrateur si le renfort S1 est actif) | Une seule carte à la fois : la prochaine tâche du plan et sa fiche (champs à copier), bouton « Fait » (touche Entrée) puis « Annuler » pendant 2 s, mini-fenêtre au premier plan (Chrome, Edge), budget restant, déclaration d'absence |
+| E1 Mes tâches | Contributeurs (et l'orchestrateur si le renfort S1 est actif) | Une seule carte à la fois : la prochaine tâche du plan et sa fiche (champs à copier), bouton « Fait » puis « Annuler » pendant 2 s, budget restant, déclaration d'absence |
 | E2 Tour de contrôle | Orchestrateur | Lisible par un remplaçant : phrase-verdict et cause, retard sur le plan, « Que faire ? » (2 actions et leur effet en clair), schéma du parcours d'une offre et de l'étape qui bloque, l'équipe du jour, le rythme ; détail des 5 contrôles replié |
-| E3 Suivi des offres | Orchestrateur | Les 200 offres, étape par étape, recherche, filtres, export CSV |
+| E3 Suivi des offres | Orchestrateur | Les 200 offres, étape par étape, recherche, filtres |
 | E4 Simulation (démo) | Orchestrateur | +1h, +2h, jour suivant, aller au début de Jx, mode auto, reset. N'existe que pour la démo, signalé en pointillés |
-| E5 Organisation | Orchestrateur | Qui fait quoi (étapes × personnes, tâche majeure, priorités, charge et capacité du mois), mode forcé, absences, heures exceptionnelles, actions appliquées (annulables) |
+| E5 Organisation | Orchestrateur | Qui fait quoi (étapes × personnes, tâche majeure, priorités, charge et capacité du mois), absences, heures exceptionnelles, actions appliquées (annulables) |
 | E6 Journal | Orchestrateur | Tous les événements, filtrables par type |
 
 Un contributeur ne voit que « Mes tâches ». La barre du haut affiche l'horloge simulée (en pointillés : c'est la démo) et, pour l'orchestrateur seulement, le niveau global (vert, orange, rouge) et les profils en ligne.

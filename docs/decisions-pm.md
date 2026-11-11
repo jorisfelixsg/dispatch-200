@@ -47,8 +47,21 @@ Suite de la critique Impeccable (27/40, deux problèmes P1). Textes et présenta
 - **Fiche d'exécution** : la carte donne les champs à copier dans le back-office pour l'étape (nom, catégorie, URL, description, image, logo ; liste de contrôle indicative pour S5) et dit pour qui la tâche compte (« Bob en a besoin pour ajouter le logo »). Pas de lien vers le back-office : la démo n'en a pas.
 - **Annuler** : après « Fait », un bouton « Annuler » avec une barre de progression rouge reste 2 s. L'étape n'est envoyée au serveur qu'à la fin des 2 s : annuler n'enregistre donc rien. Quitter l'écran ou fermer la page envoie aussitôt l'étape en attente. Conséquence sur US-03 : le S4 apparaît chez Bob moins de 2 s après la fin du bouton, soit environ 4 s après le clic.
 - **Pendant les 2 s (PM, 2026-11-11, après la mise en ligne)** : la carte de la tâche validée reste affichée, marquée « Faite », et « Annuler » prend la place de « Fait ». La tâche suivante n'apparaît qu'à la fin des 2 s, avec son bouton « Fait ». Entrée ne fait rien pendant ces 2 s. L'ancienne tâche ne réapparaît plus le temps que le serveur réponde.
-- **Mini-fenêtre** : « Ouvrir la mini-fenêtre » affiche la même carte en petit, au premier plan (Document Picture-in-Picture, Chrome et Edge). Le bouton n'apparaît pas sur les autres navigateurs.
-- **Clavier** : Entrée = Fait, Ctrl+Z = Annuler.
+- **Mini-fenêtre** et **clavier** (Entrée = Fait, Ctrl+Z = Annuler) : retirés le 2026-11-11, voir « Sobriété » ci-dessous.
+
+## Sobriété (2026-11-11)
+
+Le cas demande du pragmatisme, « without over-engineering ». Retiré parce que rien dans le brief ne le demande et que ça ne se voit pas ou ne sert pas pendant la démo :
+
+- **Mini-fenêtre** de « Mes tâches » (Document Picture-in-Picture).
+- **Raccourcis clavier** Entrée = Fait et Ctrl+Z = Annuler, et l'étiquette « Entrée » sur le bouton.
+- **Profils « En ligne »** dans la barre de l'orchestrateur (US-20).
+- **Export CSV** du suivi des offres (US-19).
+- **Lettre d'importance** (A, B, C) dans le suivi des offres : elle ne servait qu'à l'action « Prioriser les marchands importants », déjà retirée. La donnée reste dans le jeu de données.
+- **Ligne « Mode forcé »** dans L'organisation : reste de l'action « Forcer l'ordre », déjà retirée. Le moteur garde de quoi annuler d'anciennes actions de ce type.
+- **Grande courbe** du « Détail des calculs » : doublon de « Le rythme ».
+
+Laissés en l'état pour l'instant (à trancher) : fiche d'exécution, Journal, déclaration d'absence depuis L'organisation, boutons +1h et +2h de la Simulation.
 
 ## Précisions de règles
 
