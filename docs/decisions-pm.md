@@ -40,7 +40,7 @@ Suite de la critique Impeccable (27/40, deux problèmes P1). Textes et présenta
 - **Prévenir la personne** : une fois la personne choisie, « Avant d'appliquer : demander son accord à Charlie pour le J7. L'application n'envoie aucun message. »
 - **Après « Appliquer »** : une confirmation reste affichée en haut de « Que faire ? » (masquable), avec le niveau du moment expliqué en clair.
 - **« Règle le problème » devient « Comble le manque »** : le niveau peut rester orange. Le texte d'effet explique désormais le niveau d'arrivée (orange : plus rien ne manque, mais au moins un point a 1 h d'avance ou moins ; rouge : un autre point manque encore de temps).
-- **Prévision au J22 automatique** : d'abord abandonnée, puis reprise (PM, 2026-11-11) : calculée à l'ouverture de la tour et après chaque changement de l'état, sans bouton.
+- **Prévision au J22** : retirée de la tour (PM, 2026-11-11), voir « Un seul indicateur » ci-dessous.
 
 ## Tour de contrôle : retouches P2 (2026-11-11)
 
@@ -51,12 +51,11 @@ Plus petit changement à chaque fois (PM : pas de sur-ingénierie).
 - **Mot « démo » hors de la démo** : la légende du rythme dit « plan calculé au début du mois ».
 - **Accessibilité** : la phrase-verdict est un titre, annoncé quand il change ; la description du schéma pour lecteur d'écran donne aussi l'avance ou le retard de chaque étape et l'étape qui bloque.
 
-## Tour de contrôle : cohérence bandeau / prévision (2026-11-11)
+## Tour de contrôle : un seul indicateur (2026-11-11)
 
-Texte et affichage seulement, aucune règle changée (l'échéance S4 reste J20).
-
-- **Marge de sécurité** : quand le niveau est orange ou rouge sur un contrôle qui finit avant le J22 (S2 au J19, S4 au J20) et que la prévision atteint 200, une ligne sous la prévision explique que cette échéance est une marge de sécurité et que les offres peuvent quand même toutes sortir d'ici le J22.
-- **Actions sans effet repliées** : les actions qui ne changent rien pour l'étape en manque sont cachées derrière « Voir les actions sans effet sur ce manque ». Si aucune action n'aide, le bloc le dit en une phrase et renvoie à la prévision. Une action dont on a changé la personne ou le jour reste affichée.
+- **Prévision au J22 retirée (US-17, COULD)** : elle contredisait le niveau dans les deux sens (Rouge avec une prévision à 200 à cause de l'échéance J20 du logo, Vert avec une prévision à 195 parce que les contrôles ne voient pas les temps morts). Le PM garde un seul indicateur : les contrôles R9 et le niveau R10, qui disent quoi faire et donnent l'effet exact d'une action. Le moteur garde la projection (`engine/projection.ts`, testée), elle n'est plus affichée ; la route `/api/projection` est supprimée.
+- **Limites acceptées du niveau** : trop prudent en fin de mois (échéance S4 au J20), un peu optimiste quand Charlie passe du temps sur S1 et S5 (hypothèse 9).
+- **Actions sans effet repliées** : les actions qui ne changent rien pour l'étape en manque sont cachées derrière « Voir les actions sans effet sur ce manque ». Si aucune action n'aide, le bloc le dit en une phrase. Une action dont on a changé la personne ou le jour reste affichée.
 
 ## « Mes tâches » v2 (2026-11-11)
 

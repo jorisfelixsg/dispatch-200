@@ -7,7 +7,6 @@ import type { ControlResult, Level } from "@/lib/engine/controls";
 import type { ActionProposal, ActionType } from "@/lib/engine/actions";
 import type { Indicators } from "@/lib/engine/indicators";
 import type { FlowFacts, TeamMember } from "@/lib/engine/flow";
-import type { Projection } from "@/lib/engine/projection";
 
 export interface TaskView {
   offerId: number;
@@ -105,5 +104,3 @@ export interface ActionPreview {
 }
 
 export type PreviewResponse = { ok: true; preview: ActionPreview } | { ok: false; error: string; code?: string };
-
-export type ProjectionResponse = { ok: true; projection: Projection } | { ok: false; error: string };

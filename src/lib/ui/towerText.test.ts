@@ -18,7 +18,6 @@ import {
   levelNowNote,
   marginPhrase,
   planGap,
-  safetyMarginNote,
   verdict,
   worstControl,
 } from "./towerText";
@@ -134,19 +133,5 @@ describe("Tower v2 — gap with the plan and actions", () => {
     expect(actionEffect("EXTRA_HOUR", worst, -60, "red", "red", "charlie").text).toBe(
       "Ça aide, mais il manquera encore 1 h pour l'étape « Créer l'offre » (S3).",
     );
-  });
-});
-
-describe("Tower v2 — safety margin note", () => {
-  it("explains a J20 deadline when the forecast reaches every offer", () => {
-    expect(safetyMarginNote(20, 200, 200)).toBe(
-      "Le J20 est une marge de sécurité : d'après la simulation, les offres peuvent quand même toutes sortir d'ici le J22.",
-    );
-  });
-
-  it("says nothing for a J22 deadline, a short forecast or no worst control", () => {
-    expect(safetyMarginNote(22, 200, 200)).toBeNull();
-    expect(safetyMarginNote(20, 199, 200)).toBeNull();
-    expect(safetyMarginNote(null, 200, 200)).toBeNull();
   });
 });

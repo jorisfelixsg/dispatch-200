@@ -308,12 +308,7 @@ export function ActionsPanel({ payload }: { payload: ControlPayload }) {
       ) : (
         <>
           {nothingHelps && (
-            <p className="text-sm">
-              <b className="font-medium">Aucune action proposée ne comble ce manque.</b>{" "}
-              <span className="text-muted-foreground">
-                La prévision au J{BUSINESS_DAYS}, en haut, indique si les offres peuvent quand même sortir à temps.
-              </span>
-            </p>
+            <p className="text-sm font-medium">Aucune action proposée ne comble ce manque.</p>
           )}
           <ol className="space-y-2">
             {payload.proposals.map((p) => (
