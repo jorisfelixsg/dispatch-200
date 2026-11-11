@@ -18,6 +18,14 @@ Ces décisions ont été prises pendant la construction du MVP (2026-11-09 et 20
 - **Organisation** : l'écran E5 s'appelle « L'organisation » et commence par un tableau étapes × personnes (tâche majeure, priorités, charge et capacité du mois). C'est la réponse visuelle à « qui fait quoi ».
 - **Audit de périmètre, recommandations non retenues** : tour de contrôle simplifiée, retrait de « Forcer l'ordre », retrait du Journal de la navigation, retrait du badge « majeure / secondaire ». Tout cela reste en place.
 
+## « Mes tâches » v2 (2026-11-11)
+
+- **Une seule carte** : le contributeur ne voit plus la liste, seulement sa première tâche (même moteur, même ordre R5 ; toute la liste reste réservée, donc pas de doublon). Une ligne annonce la suite. Le rang, la durée par tâche et le badge « majeure / secondaire » ne sont plus affichés.
+- **Fiche d'exécution** : la carte donne les champs à copier dans le back-office pour l'étape (nom, catégorie, URL, description, image, logo ; liste de contrôle indicative pour S5) et dit pour qui la tâche compte (« Bob en a besoin pour ajouter le logo »). Pas de lien vers le back-office : la démo n'en a pas.
+- **Annuler** : après « Fait », un bouton « Annuler » avec une barre de progression rouge reste 2 s. L'étape n'est envoyée au serveur qu'à la fin des 2 s : annuler n'enregistre donc rien. Valider la tâche suivante, quitter l'écran ou fermer la page envoie aussitôt l'étape en attente. Conséquence sur US-03 : le S4 apparaît chez Bob moins de 2 s après la fin du bouton, soit environ 4 s après le clic.
+- **Mini-fenêtre** : « Ouvrir la mini-fenêtre » affiche la même carte en petit, au premier plan (Document Picture-in-Picture, Chrome et Edge). Le bouton n'apparaît pas sur les autres navigateurs.
+- **Clavier** : Entrée = Fait, Ctrl+Z = Annuler.
+
 ## Précisions de règles
 
 - **R5, parcours d'Alice** : un marchand reste dans son parcours tant que S2 **et** S1 ne sont pas faits. La lecture littérale (« marchand sans S2 ») faisait échouer le test des 50 graines vers 170 offres publiées ; la lecture retenue passe 50/50.

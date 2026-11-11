@@ -11,7 +11,7 @@ Démo en ligne : https://dispatch-200.vercel.app
 | Écran | Qui | Contenu |
 |---|---|---|
 | E0 Accueil | Tous | Choix du profil (mémorisé dans le navigateur) |
-| E1 Mes tâches | Contributeurs (et l'orchestrateur si le renfort S1 est actif) | Budget du jour, liste ordonnée, bouton « Fait », déclaration d'absence |
+| E1 Mes tâches | Contributeurs (et l'orchestrateur si le renfort S1 est actif) | Une seule carte à la fois : la prochaine tâche du plan et sa fiche (champs à copier), bouton « Fait » (touche Entrée) puis « Annuler » pendant 2 s, mini-fenêtre au premier plan (Chrome, Edge), budget restant, déclaration d'absence |
 | E2 Tour de contrôle | Orchestrateur | Indicateurs, 5 contrôles de capacité et leurs niveaux, courbe réel/référence, projection, actions de rattrapage avec aperçu d'impact |
 | E3 Suivi des offres | Orchestrateur | Les 200 offres, étape par étape, recherche, filtres, export CSV |
 | E4 Simulation (démo) | Orchestrateur | +1h, +2h, jour suivant, aller au début de Jx, mode auto, reset. N'existe que pour la démo, signalé en pointillés |
@@ -28,8 +28,8 @@ fenêtre de navigation privée, ou un téléphone). Chaque fenêtre garde son pr
 | Temps | Qui | Action | Ce qu'on montre |
 |---|---|---|---|
 | 0:00 | Orchestrateur | **Simulation › Réinitialiser la démo**, puis **Tour de contrôle** | 0 / 200, marges +540 / +120 / +600 / +240 / +360, niveau Vert, courbe de référence |
-| 0:30 | Alice, Bob, Charlie | Ouvrir **Mes tâches** | Trois listes différentes, sans doublon (Bob et Charlie se partagent les S1) |
-| 1:00 | Alice | **Fait** sur un S2 | Le S4 du même marchand apparaît chez Bob en moins de 2 s ; le budget d'Alice baisse de 3 min |
+| 0:30 | Alice, Bob, Charlie | Ouvrir **Mes tâches** | Trois cartes différentes, sans doublon (Bob et Charlie se partagent les S1), chacune avec les champs à copier |
+| 1:00 | Alice | **Fait** sur un S2 | La carte suivante arrive aussitôt et un bouton rouge « Annuler » se vide en 2 s. À la fin du bouton, l'étape part au serveur : le S4 du même marchand apparaît chez Bob dans les 2 s qui suivent, le budget d'Alice baisse de 3 min |
 | 1:30 | Orchestrateur | **Simulation › Jour suivant** | Les budgets reviennent à 60 min, en direct, chez chacun |
 | 2:00 | Orchestrateur | **Simulation › Réinitialiser la démo**, puis **Jouer jusqu'au début de J5** | Le mode auto joue J1 à J4 ; la tour montre 30 S3 faits, marge S3 +60, niveau Orange (l'exemple de la règle R9). Dans **Suivi des offres**, la colonne « S5 possible à partir de » affiche J5 09:51, J5 09:54… : la règle des 24h après S4 |
 | 2:45 | Charlie | **Déclarer une absence** pour J5, puis J6 | Marge S3 0, puis −60 ; S5 passe aussi en négatif : niveau **Rouge** dans la barre du haut de l'orchestrateur |

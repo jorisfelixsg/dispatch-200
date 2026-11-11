@@ -16,6 +16,10 @@ export interface TaskView {
   major: boolean;
   merchantName: string;
   category: string;
+  /** Execution kit (piste 2): what the contributor copies into the back-office. */
+  description: string;
+  url: string;
+  imageUrl: string;
   logoUrl: string;
 }
 

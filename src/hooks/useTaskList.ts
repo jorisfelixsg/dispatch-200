@@ -19,8 +19,8 @@ export interface DoneOutcome {
   doneAtSim?: number;
 }
 
-async function postJson<T>(url: string, body: unknown): Promise<T> {
-  const res = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+async function postJson<T>(url: string, body: unknown, keepalive = false): Promise<T> {
+  const res = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body), keepalive });
   try {
     return (await res.json()) as T;
   } catch {
@@ -81,7 +81,7 @@ export function useTaskList(personId: PersonId | null | undefined) {
       if (!personId) return { ok: false, message: "Aucun profil." };
       const seq = ++sequence.current;
       try {
-        const res = await postJson<DoneResponse>("/api/tasks/done", { personId, offerId, step });
+        const res = await postJson<DoneResponse>("/api/tasks/done", { personId, offerId, step }, true);
         // Done (or done by someone else): never show this task again, even from a stale answer.
         if (res.ok || res.code === "already_done") {
           const key = `${offerId}:${step}`;

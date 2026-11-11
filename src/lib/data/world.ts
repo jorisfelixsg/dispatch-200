@@ -28,6 +28,9 @@ import {
 interface OfferInfo {
   merchantName: string;
   category: string;
+  description: string;
+  url: string;
+  imageUrl: string;
   logoUrl: string;
 }
 
@@ -52,7 +55,7 @@ function check<T>(res: { data: T | null; error: { message: string } | null }, wh
 
 export async function loadWorld(supabase: SupabaseClient): Promise<LoadedWorld> {
   const [offers, executions, people, adjustments, sessions, reservations, sim] = await Promise.all([
-    supabase.from("offer").select("id, rank, importance, merchant_name, category, logo_url").order("rank"),
+    supabase.from("offer").select("id, rank, importance, merchant_name, category, description, url, image_url, logo_url").order("rank"),
     supabase.from("step_execution").select("offer_id, step, done_by, done_at_sim, done_at_real, in_priority, source"),
     supabase.from("person").select("*").order("sort_order"),
     supabase.from("day_adjustment").select("person_id, day_index, extra_min, absent_declared, absent_detected"),
@@ -69,13 +72,23 @@ export async function loadWorld(supabase: SupabaseClient): Promise<LoadedWorld> 
     importance: "A" | "B" | "C";
     merchant_name: string;
     category: string;
+    description: string;
+    url: string;
+    image_url: string;
     logo_url: string;
   }[];
 
   return {
     autoRunning: simRow.auto_running,
     referenceCurve: simRow.reference_curve ?? null,
-    offerInfo: new Map(offerRows.map((o) => [o.id, { merchantName: o.merchant_name, category: o.category, logoUrl: o.logo_url }])),
+    offerInfo: new Map(offerRows.map((o) => [o.id, {
+          merchantName: o.merchant_name,
+          category: o.category,
+          description: o.description,
+          url: o.url,
+          imageUrl: o.image_url,
+          logoUrl: o.logo_url,
+        }])),
     state: {
       nowSim: simRow.now_sim,
       nowReal: Date.now(),
@@ -137,6 +150,9 @@ export function toPayload(world: LoadedWorld, list: TaskListResult): TasksPayloa
         major: t.major,
         merchantName: info?.merchantName ?? `Offre ${t.offerId}`,
         category: info?.category ?? "",
+        description: info?.description ?? "",
+        url: info?.url ?? "",
+        imageUrl: info?.imageUrl ?? "",
         logoUrl: info?.logoUrl ?? "",
       };
     }),

@@ -1,27 +1,20 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
-import { Check, Clock, Loader2 } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Loader2, PictureInPicture2 } from "lucide-react";
+import { useDeferredDone } from "@/hooks/useDeferredDone";
 import { useProfile } from "@/hooks/useProfile";
 import { useTaskList } from "@/hooks/useTaskList";
-import type { Step } from "@/lib/engine/config";
 import type { EmptyReason } from "@/lib/engine/taskList";
-import { formatSimShort } from "@/lib/engine/time";
 import type { TaskView } from "@/lib/live/contracts";
-import { Badge } from "@/components/ui/badge";
+import { STEP_NAMES } from "@/lib/ui/taskKit";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { AbsencePanel } from "./AbsencePanel";
+import { useMiniWindow, useMiniWindowSupported } from "./MiniWindow";
+import { TaskCard, UndoButton } from "./TaskCard";
 
-/** Short reason shown on each task: what finishing it unblocks (from R1 and R2). */
-const REASONS: Record<Step, string> = {
-  S1: "débloque S3",
-  S2: "débloque S3 et S4",
-  S3: "débloque S5",
-  S4: "débloque le compteur 24h",
-  S5: "publie l'offre",
-};
+const keyOf = (t: TaskView) => `${t.offerId}:${t.step}`;
 
 function emptyMessage(reason: EmptyReason | null, remaining: number): { title: string; detail: string } {
   switch (reason) {
@@ -46,25 +39,62 @@ interface Feedback {
   text: string;
 }
 
-/** E1 — « Mes tâches » (contributors). */
+/** What comes after the current card, in a few words (the list itself is no longer shown). */
+function nextHint(current: TaskView, next: TaskView | undefined): string {
+  if (!next) return "C'est la dernière tâche de ta liste pour l'instant.";
+  if (next.offerId === current.offerId) return "Ensuite : une autre étape du même marchand.";
+  if (next.step === current.step) return "Ensuite : le marchand suivant, mêmes gestes.";
+  return `Ensuite : ${STEP_NAMES[next.step].toLowerCase()}.`;
+}
+
+/** E1 — « Mes tâches » v2 (PM decision 2026-11-11): one card at a time, its execution kit, undo, mini window. */
 export function TasksScreen() {
   const { profile } = useProfile();
   const { state, markDone, declareAbsence } = useTaskList(profile);
-  const [pending, setPending] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const onError = useCallback(
+    (task: TaskView, message: string) => setFeedback({ ok: false, text: `${task.step} · ${task.merchantName} : ${message}` }),
+    [],
+  );
+  const { pending, done, undo } = useDeferredDone(markDone, onError);
+  const mini = useMiniWindow();
+  const miniSupported = useMiniWindowSupported();
 
-  const onDone = async (task: TaskView) => {
-    const key = `${task.offerId}:${task.step}`;
-    setPending(key);
+  const payload = state.status === "ready" ? state.payload : null;
+  const pendingKey = pending ? keyOf(pending) : null;
+  // The card shows the first task of the engine's list (R5); the pending one is already gone.
+  const tasks = payload ? payload.tasks.filter((t) => keyOf(t) !== pendingKey) : [];
+  const current = tasks[0];
+  const disabled = !payload || payload.autoRunning;
+
+  const validate = () => {
+    if (!current || disabled) return;
     setFeedback(null);
-    const outcome = await markDone(task.offerId, task.step);
-    setPending(null);
-    setFeedback(
-      outcome.ok
-        ? { ok: true, text: `${task.step} · ${task.merchantName} : fait, fin à ${formatSimShort(outcome.doneAtSim ?? 0)}.` }
-        : { ok: false, text: outcome.message },
-    );
+    done(current);
   };
+  // The keyboard listener always calls the latest validate().
+  const validateRef = useRef(validate);
+  useEffect(() => {
+    validateRef.current = validate;
+  });
+
+  // Entrée = Fait, Ctrl+Z = Annuler, in the page and in the mini window.
+  useEffect(() => {
+    const docs = [document, mini.pip?.document].filter((d): d is Document => Boolean(d));
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest("input, textarea, select, [contenteditable]")) return;
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        undo();
+      } else if (e.key === "Enter" && !target?.closest("button, a")) {
+        e.preventDefault();
+        validateRef.current();
+      }
+    };
+    docs.forEach((d) => d.addEventListener("keydown", onKey));
+    return () => docs.forEach((d) => d.removeEventListener("keydown", onKey));
+  }, [undo, mini.pip]);
 
   if (state.status === "loading") {
     return (
@@ -77,103 +107,98 @@ export function TasksScreen() {
     );
   }
 
-  if (state.status === "error") {
+  if (state.status === "error" || !payload) {
     return (
       <section className="space-y-4">
         <h1 className="text-2xl font-semibold">Mes tâches</h1>
         <p role="alert" className="rounded-md border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
-          Impossible de calculer ta liste : {state.message}
+          Impossible de calculer ta liste : {state.status === "error" ? state.message : "état inconnu"}
         </p>
       </section>
     );
   }
 
-  const p = state.payload;
-  const total = p.tasks.reduce((s, t) => s + t.duration, 0);
-  const usedPct = p.budget > 0 ? Math.min(100, Math.round((p.consumed / p.budget) * 100)) : 100;
-  const empty = emptyMessage(p.emptyReason, p.remaining);
+  const pendingMin = pending?.duration ?? 0;
+  const remainingMin = Math.max(0, payload.remaining - pendingMin);
+  const usedPct = payload.budget > 0 ? Math.min(100, Math.round(((payload.consumed + pendingMin) / payload.budget) * 100)) : 100;
+  const empty = pending
+    ? { title: "C'était la dernière tâche de ta liste.", detail: "La liste se met à jour toute seule dès qu'une tâche se débloque." }
+    : emptyMessage(payload.emptyReason, payload.remaining);
+  const summary = current
+    ? `Encore ${tasks.length} tâche${tasks.length > 1 ? "s" : ""} · ${remainingMin} min de budget`
+    : `${remainingMin} min de budget`;
+
+  const banner = payload.autoRunning && (
+    <p role="status" className="rounded-md border border-warn/30 bg-warn/10 p-3 text-sm font-medium text-warn">
+      Simulation en cours : le bouton « Fait » est désactivé.
+    </p>
+  );
 
   return (
-    <section className="space-y-4">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
+    <section className="mx-auto max-w-2xl space-y-4">
+      <header className="space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <h1 className="text-2xl font-semibold">Mes tâches</h1>
-          <p className="text-sm text-muted-foreground">
-            {p.tasks.length > 0 ? `${p.tasks.length} tâche${p.tasks.length > 1 ? "s" : ""} · ${total} min` : "Aucune tâche proposée"}
-          </p>
+          {miniSupported && (
+            <Button variant="outline" size="sm" className="h-11 sm:h-9" onClick={() => void (mini.pip ? mini.close() : mini.open())}>
+              <PictureInPicture2 aria-hidden />
+              {mini.pip ? "Fermer la mini-fenêtre" : "Ouvrir la mini-fenêtre"}
+            </Button>
+          )}
         </div>
-        <div className="w-full rounded-xl border border-border bg-card p-3 sm:w-72" aria-live="polite">
-          <p className="flex items-baseline justify-between text-sm">
-            <span className="font-medium">Budget du jour</span>
-            <span>
-              <span className="font-mono text-base font-semibold tabular-nums">{p.remaining}</span>
-              <span className="text-muted-foreground"> / {p.budget} min restantes</span>
-            </span>
-          </p>
-          <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted" aria-hidden>
-            <div className={cn("h-full rounded-full", p.remaining === 0 ? "bg-warn" : "bg-primary")} style={{ width: `${usedPct}%` }} />
-          </div>
+        <p className="text-sm text-muted-foreground" aria-live="polite">
+          {summary}
+        </p>
+        <div className="h-2 overflow-hidden rounded-full bg-muted" aria-hidden>
+          <div
+            className={cn("h-full rounded-full transition-all", remainingMin === 0 ? "bg-warn" : "bg-primary")}
+            style={{ width: `${usedPct}%` }}
+          />
         </div>
       </header>
 
-      {p.autoRunning && (
-        <p role="status" className="rounded-md border border-warn/30 bg-warn/10 p-3 text-sm font-medium text-warn">
-          Simulation en cours : les boutons « Fait » sont désactivés.
-        </p>
-      )}
+      {banner}
 
       {feedback && (
-        <p role="status" className={cn("rounded-md border p-3 text-sm", feedback.ok ? "border-ok/30 bg-ok/10 text-ok" : "border-danger/30 bg-danger/10 text-danger")}>
+        <p
+          role="status"
+          className={cn("rounded-md border p-3 text-sm", feedback.ok ? "border-ok/30 bg-ok/10 text-ok" : "border-danger/30 bg-danger/10 text-danger")}
+        >
           {feedback.text}
         </p>
       )}
 
-      {p.tasks.length === 0 ? (
+      {current ? (
+        <TaskCard key={keyOf(current)} task={current} onDone={validate} disabled={disabled} />
+      ) : (
         <div className="rounded-xl border border-dashed border-border bg-card p-6">
           <p className="font-medium">{empty.title}</p>
           <p className="mt-1 text-sm text-muted-foreground">{empty.detail}</p>
         </div>
-      ) : (
-        <ol className="space-y-2">
-          {p.tasks.map((t, i) => {
-            const key = `${t.offerId}:${t.step}`;
-            return (
-              <li key={key} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3">
-                <span className="hidden w-6 text-right font-mono text-xs tabular-nums text-muted-foreground sm:block">{i + 1}</span>
-                <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 font-mono text-sm font-semibold text-primary">
-                  {t.step}
-                </span>
-                <Image src={t.logoUrl} alt="" width={36} height={36} unoptimized className="hidden size-9 shrink-0 rounded-lg sm:block" />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{t.merchantName}</p>
-                  <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                    <span>rang {t.rank}</span>
-                    <span className="inline-flex items-center gap-1">
-                      <Clock className="size-3" aria-hidden />
-                      {t.duration} min
-                    </span>
-                    <Badge variant={t.major ? "default" : "outline"} className="px-2 py-0">
-                      {t.major ? "majeure" : "secondaire"}
-                    </Badge>
-                    <span>{REASONS[t.step]}</span>
-                  </p>
-                </div>
-                <Button
-                  onClick={() => void onDone(t)}
-                  disabled={p.autoRunning || pending !== null}
-                  aria-label={`Fait : ${t.step} ${t.merchantName}`}
-                  className="shrink-0"
-                >
-                  {pending === key ? <Loader2 className="animate-spin" aria-hidden /> : <Check aria-hidden />}
-                  Fait
-                </Button>
-              </li>
-            );
-          })}
-        </ol>
       )}
 
-      {profile !== "orchestrator" && <AbsencePanel today={p.dayIndex} absences={p.absences} onDeclare={declareAbsence} />}
+      {pending && <UndoButton key={keyOf(pending)} onUndo={undo} />}
+
+      {current && <p className="text-sm text-muted-foreground">{nextHint(current, tasks[1])}</p>}
+
+      {profile !== "orchestrator" && <AbsencePanel today={payload.dayIndex} absences={payload.absences} onDeclare={declareAbsence} />}
+
+      {mini.render(
+        <div className="grid gap-2 p-3">
+          {banner}
+          {current ? (
+            <TaskCard key={keyOf(current)} task={current} onDone={validate} disabled={disabled} compact />
+          ) : (
+            <p className="rounded-lg border border-dashed border-border p-4 text-sm">
+              <span className="font-medium">{empty.title}</span>
+              <br />
+              <span className="text-muted-foreground">{empty.detail}</span>
+            </p>
+          )}
+          {pending && <UndoButton key={keyOf(pending)} onUndo={undo} compact />}
+          <p className="text-center text-xs text-muted-foreground">{summary}</p>
+        </div>,
+      )}
     </section>
   );
 }

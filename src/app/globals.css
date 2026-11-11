@@ -73,3 +73,25 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
+
+/* « Mes tâches » v2 — the « Annuler » button drains like a red progress bar (PM decision 2026-11-11). */
+@keyframes undo-drain {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+.undo-drain {
+  transform-origin: left;
+  animation-name: undo-drain;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .undo-drain {
+    animation: none;
+    transform: scaleX(0.5);
+  }
+}
