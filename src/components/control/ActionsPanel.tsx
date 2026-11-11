@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { CircleCheck, Loader2, MessageCircle, X } from "lucide-react";
 import type { ActionProposal } from "@/lib/engine/actions";
 import { BUSINESS_DAYS } from "@/lib/engine/config";
@@ -46,15 +46,32 @@ function ActionRow({
   proposal,
   payload,
   worst,
+  tagKey,
+  folded,
   onApplied,
+  onTag,
 }: {
   proposal: ActionProposal;
   payload: ControlPayload;
   worst: ControlResult;
+  tagKey: string;
+  /** Hidden behind « Voir les actions sans effet » (no effect on the worst step). */
+  folded: boolean;
   onApplied: (note: string) => void;
+  /** Effect tag reported to the panel; null once the stand-in changed the inputs (the row then stays visible). */
+  onTag: (key: string, tag: EffectTag | null) => void;
 }) {
-  const [personId, setPersonId] = useState<PersonId | "">(proposal.personId ?? "");
-  const [day, setDay] = useState<number | null>(proposal.dayIndex);
+  const [personId, setPersonIdRaw] = useState<PersonId | "">(proposal.personId ?? "");
+  const [day, setDayRaw] = useState<number | null>(proposal.dayIndex);
+  const [touched, setTouched] = useState(false);
+  const setPersonId = (id: PersonId) => {
+    setTouched(true);
+    setPersonIdRaw(id);
+  };
+  const setDay = (d: number) => {
+    setTouched(true);
+    setDayRaw(d);
+  };
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -101,6 +118,8 @@ function ActionRow({
   };
   const effect = !needsPerson ? effectFor(null) : personId !== "" ? effectFor(personId) : null;
   const helps = effect !== null && effect.tag !== "none";
+  const reported = touched ? null : alreadyActive ? "none" : (effect?.tag ?? null);
+  useEffect(() => onTag(tagKey, reported), [tagKey, reported, onTag]);
 
   const apply = async () => {
     setBusy(true);
@@ -118,6 +137,7 @@ function ActionRow({
       className={cn(
         "grid grid-cols-1 items-center gap-3 rounded-xl border p-3 md:grid-cols-[minmax(0,1fr)_auto]",
         helps ? "border-2 border-ok bg-ok/10 py-4" : "border-border",
+        folded && "hidden",
       )}
     >
       <div className="min-w-0 space-y-1.5">
@@ -248,6 +268,17 @@ export function ActionsPanel({ payload }: { payload: ControlPayload }) {
   const worst = payload.proposals.length > 0 ? found : null;
   // Kept at panel level: after « Appliquer » the rows are recalculated (and vanish when the level turns green).
   const [applied, setApplied] = useState<string | null>(null);
+  // Actions without effect on the worst step are folded, so « Que faire ? » does not invite useless clicks.
+  const [tags, setTags] = useState<Record<string, EffectTag | null>>({});
+  const [showOthers, setShowOthers] = useState(false);
+  const reportTag = useCallback(
+    (key: string, tag: EffectTag | null) => setTags((t) => (t[key] === tag ? t : { ...t, [key]: tag })),
+    [],
+  );
+  const keyOf = (p: ActionProposal) => `${p.type}:${p.personId ?? ""}:${p.dayIndex ?? ""}`;
+  const keys = payload.proposals.map(keyOf);
+  const noEffect = keys.filter((k) => tags[k] === "none");
+  const nothingHelps = keys.length > 0 && noEffect.length === keys.length;
 
   return (
     <section className="space-y-3 rounded-2xl border border-border bg-card p-4 md:p-5">
@@ -275,11 +306,40 @@ export function ActionsPanel({ payload }: { payload: ControlPayload }) {
       {!worst ? (
         !applied && <p className="text-sm text-muted-foreground">Rien pour l&apos;instant : tout est dans les temps, aucune action n&apos;est proposée.</p>
       ) : (
-        <ol className="space-y-2">
-          {payload.proposals.map((p) => (
-            <ActionRow key={`${p.type}:${p.personId ?? ""}:${p.dayIndex ?? ""}`} proposal={p} payload={payload} worst={worst} onApplied={setApplied} />
-          ))}
-        </ol>
+        <>
+          {nothingHelps && (
+            <p className="text-sm">
+              <b className="font-medium">Aucune action proposée ne comble ce manque.</b>{" "}
+              <span className="text-muted-foreground">
+                La prévision au J{BUSINESS_DAYS}, en haut, indique si les offres peuvent quand même sortir à temps.
+              </span>
+            </p>
+          )}
+          <ol className="space-y-2">
+            {payload.proposals.map((p) => (
+              <ActionRow
+                key={keyOf(p)}
+                tagKey={keyOf(p)}
+                proposal={p}
+                payload={payload}
+                worst={worst}
+                folded={!showOthers && tags[keyOf(p)] === "none"}
+                onApplied={setApplied}
+                onTag={reportTag}
+              />
+            ))}
+          </ol>
+          {noEffect.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowOthers((v) => !v)}
+              aria-expanded={showOthers}
+              className="w-fit rounded text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {showOthers ? "Masquer" : "Voir"} les actions sans effet sur ce manque ({noEffect.length})
+            </button>
+          )}
+        </>
       )}
       <ActiveActions payload={payload} />
     </section>

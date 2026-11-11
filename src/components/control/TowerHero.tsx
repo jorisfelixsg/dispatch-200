@@ -4,7 +4,7 @@ import { BUSINESS_DAYS, OFFER_COUNT } from "@/lib/engine/config";
 import type { Level } from "@/lib/engine/controls";
 import type { PersonId } from "@/lib/engine/people";
 import type { ControlPayload } from "@/lib/live/contracts";
-import { daysLeft, planGap, verdict } from "@/lib/ui/towerText";
+import { daysLeft, planGap, verdict, worstControl } from "@/lib/ui/towerText";
 import { LevelPill } from "@/components/LevelPill";
 import { cn } from "@/lib/utils";
 import { ProjectionKpi } from "./ProjectionCard";
@@ -58,7 +58,7 @@ export function TowerHero({ payload }: { payload: ControlPayload }) {
           </p>
           <span className="text-xs text-muted-foreground">{payload.indicators.endOfMonth ? "Fin du mois" : "aujourd'hui compris"}</span>
         </div>
-        <ProjectionKpi />
+        <ProjectionKpi safetyDeadline={payload.level === "green" ? null : (worstControl(payload.controls)?.deadlineDay ?? null)} />
       </div>
     </section>
   );

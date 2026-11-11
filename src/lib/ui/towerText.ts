@@ -200,3 +200,13 @@ export function actionEffect(
   text += levelAfterNote(levelBefore, levelAfter, tag);
   return { tag, text };
 }
+
+/**
+ * The controls on S2 (J19) and S4 (J20) end before J22 to leave room for the next steps: when the
+ * forecast still reaches every offer, say so, otherwise the banner and the forecast look contradictory.
+ * Null when there is nothing to explain.
+ */
+export function safetyMarginNote(deadlineDay: number | null, forecastMedian: number, offerCount: number): string | null {
+  if (deadlineDay === null || deadlineDay >= BUSINESS_DAYS || forecastMedian < offerCount) return null;
+  return `Le J${deadlineDay} est une marge de sécurité : d'après la simulation, les offres peuvent quand même toutes sortir d'ici le J${BUSINESS_DAYS}.`;
+}

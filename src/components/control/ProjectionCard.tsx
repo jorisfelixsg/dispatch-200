@@ -6,10 +6,11 @@ import { OFFER_COUNT } from "@/lib/engine/config";
 import { formatSimShort } from "@/lib/engine/time";
 import type { Projection } from "@/lib/engine/projection";
 import type { ProjectionResponse } from "@/lib/live/contracts";
+import { safetyMarginNote } from "@/lib/ui/towerText";
 import { Button } from "@/components/ui/button";
 
 /** US-17 — projection of published offers at J22, computed on demand (20 simulations). Compact, for the hero banner. */
-export function ProjectionKpi() {
+export function ProjectionKpi({ safetyDeadline }: { safetyDeadline: number | null }) {
   const [busy, setBusy] = useState(false);
   const [projection, setProjection] = useState<Projection | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -29,6 +30,8 @@ export function ProjectionKpi() {
     }
   };
 
+  const note = projection ? safetyMarginNote(safetyDeadline, projection.median, OFFER_COUNT) : null;
+
   return (
     <div className="grid content-start gap-1">
       <span className="text-xs text-muted-foreground">Prévision au J22, si rien ne change</span>
@@ -41,6 +44,7 @@ export function ProjectionKpi() {
           <span className="text-sm font-normal text-muted-foreground"> / {OFFER_COUNT} · au pire {projection.min}</span>
         </p>
       ) : null}
+      {note && <p className="max-w-64 text-xs">{note}</p>}
       <Button variant="outline" size="sm" onClick={() => void run()} disabled={busy} className="w-fit">
         {busy ? <Loader2 className="animate-spin" aria-hidden /> : <TrendingUp aria-hidden />}
         {projection ? "Recalculer" : "Calculer"}

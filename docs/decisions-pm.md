@@ -50,6 +50,13 @@ Plus petit changement à chaque fois (PM : pas de sur-ingénierie).
 - **Mot « démo » hors de la démo** : la légende du rythme dit « plan calculé au début du mois ».
 - **Accessibilité** : la phrase-verdict est un titre, annoncé quand il change ; la description du schéma pour lecteur d'écran donne aussi l'avance ou le retard de chaque étape et l'étape qui bloque.
 
+## Tour de contrôle : cohérence bandeau / prévision (2026-11-11)
+
+Texte et affichage seulement, aucune règle changée (l'échéance S4 reste J20).
+
+- **Marge de sécurité** : quand le niveau est orange ou rouge sur un contrôle qui finit avant le J22 (S2 au J19, S4 au J20) et que la prévision atteint 200, une ligne sous la prévision explique que cette échéance est une marge de sécurité et que les offres peuvent quand même toutes sortir d'ici le J22.
+- **Actions sans effet repliées** : les actions qui ne changent rien pour l'étape en manque sont cachées derrière « Voir les actions sans effet sur ce manque ». Si aucune action n'aide, le bloc le dit en une phrase et renvoie à la prévision. Une action dont on a changé la personne ou le jour reste affichée.
+
 ## « Mes tâches » v2 (2026-11-11)
 
 - **Une seule carte** : le contributeur ne voit plus la liste, seulement sa première tâche (même moteur, même ordre R5 ; toute la liste reste réservée, donc pas de doublon). Une ligne annonce la suite. Le rang, la durée par tâche et le badge « majeure / secondaire » ne sont plus affichés.
