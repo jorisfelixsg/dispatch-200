@@ -8,8 +8,8 @@ import type { Projection } from "@/lib/engine/projection";
 import type { ProjectionResponse } from "@/lib/live/contracts";
 import { Button } from "@/components/ui/button";
 
-/** US-17 — projection of published offers at J22, computed on demand (20 simulations). */
-export function ProjectionCard() {
+/** US-17 — projection of published offers at J22, computed on demand (20 simulations). Compact, for the hero banner. */
+export function ProjectionKpi() {
   const [busy, setBusy] = useState(false);
   const [projection, setProjection] = useState<Projection | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -30,26 +30,26 @@ export function ProjectionCard() {
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card p-4">
-      <div className="min-w-0 flex-1">
-        <p className="font-medium">Projection à J22</p>
-        {projection ? (
-          <p className="text-sm">
-            Si l&apos;équipe continue ainsi : <span className="font-mono font-semibold tabular-nums">{projection.median}</span> offres
-            publiées en médiane, <span className="font-mono font-semibold tabular-nums">{projection.min}</span> au minimum, sur{" "}
-            {OFFER_COUNT}. <span className="text-muted-foreground">({projection.runs} simulations depuis {formatSimShort(projection.fromSim)})</span>
-          </p>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            Simule {20} fois la fin du mois en mode auto, sur une copie de l&apos;état actuel (rien n&apos;est enregistré).
-          </p>
-        )}
-        {error && <p role="status" className="text-sm text-danger">{error}</p>}
-      </div>
-      <Button variant="outline" onClick={() => void run()} disabled={busy}>
+    <div className="grid content-start gap-1">
+      <span className="text-xs text-muted-foreground">Prévision au J22, si rien ne change</span>
+      {projection ? (
+        <p
+          className="font-mono text-2xl font-semibold tabular-nums"
+          title={`${projection.runs} simulations depuis ${formatSimShort(projection.fromSim)}`}
+        >
+          ≈ {projection.median}
+          <span className="text-sm font-normal text-muted-foreground"> / {OFFER_COUNT} · au pire {projection.min}</span>
+        </p>
+      ) : null}
+      <Button variant="outline" size="sm" onClick={() => void run()} disabled={busy} className="w-fit">
         {busy ? <Loader2 className="animate-spin" aria-hidden /> : <TrendingUp aria-hidden />}
         {projection ? "Recalculer" : "Calculer"}
       </Button>
+      {error && (
+        <p role="status" className="text-xs text-danger">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

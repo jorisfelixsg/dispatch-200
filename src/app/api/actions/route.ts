@@ -1,13 +1,14 @@
 import { failure, jsonError, readJson, serviceOr503 } from "@/lib/api/http";
 import { loadWorld } from "@/lib/data/world";
-import { applyAction, checkAction, revertAction, type Action, type ActionRefusal, type ActionType } from "@/lib/engine/actions";
+import { ACTION_ORDER, applyAction, checkAction, revertAction, type Action, type ActionRefusal } from "@/lib/engine/actions";
 import { BUSINESS_DAYS } from "@/lib/engine/config";
 import { isPersonId } from "@/lib/engine/people";
 import type { WorldState } from "@/lib/engine/types";
 import type { ActionPreview, ActionsResponse, PreviewResponse } from "@/lib/live/contracts";
 import { computeControls } from "@/lib/engine/controls";
 
-const TYPES: readonly ActionType[] = ["FORCE_ORDER", "RENFORT_S1", "EXTRA_HOUR", "RERANK"];
+// Only the proposed actions can be applied or previewed; any stored action can still be cancelled.
+const TYPES = ACTION_ORDER;
 
 const REFUSALS: Record<ActionRefusal | "auto_running" | "already_cancelled" | "not_seeded" | "unknown_action", string> = {
   unknown_person: "Personne inconnue.",

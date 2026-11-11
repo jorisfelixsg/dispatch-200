@@ -6,6 +6,7 @@ import type { EmptyReason } from "@/lib/engine/taskList";
 import type { ControlResult, Level } from "@/lib/engine/controls";
 import type { ActionProposal, ActionType } from "@/lib/engine/actions";
 import type { Indicators } from "@/lib/engine/indicators";
+import type { FlowFacts, TeamMember } from "@/lib/engine/flow";
 import type { Projection } from "@/lib/engine/projection";
 
 export interface TaskView {
@@ -77,6 +78,10 @@ export interface ControlPayload {
   today: number | null;
   /** Declared absences (R12), so the tower does not offer an extra hour on those days. */
   declaredAbsences: { personId: PersonId; dayIndex: number }[];
+  /** Tower v2 — offers waiting in front of each step and who can do each step. */
+  flow: FlowFacts;
+  /** Tower v2 — how each person's day is going. */
+  team: TeamMember[];
 }
 
 export interface ActiveAction {

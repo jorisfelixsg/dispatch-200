@@ -11,12 +11,24 @@ Ces décisions ont été prises pendant la construction du MVP (2026-11-09 et 20
 | Mode auto : « Jouer la journée en cours » et champ graine (E4) | Retirés | L'écran Simulation (ex-Horloge) ne propose que « Jouer jusqu'au début de Jx », avec la graine 42 fixe |
 | Écran E3 « Suivi des offres » pour les contributeurs (section 4) | Retiré le 2026-11-10 : un contributeur ne voit plus que « Mes tâches » | E3 reste pour l'orchestrateur |
 | Niveau global et profils « En ligne » dans la barre du haut des contributeurs (section 4, US-20) | Retirés le 2026-11-10 : ils ne peuvent pas agir dessus | Visibles par l'orchestrateur seulement |
+| Actions de rattrapage « Forcer l'ordre » et « Prioriser les marchands importants » (R11) | Retirées le 2026-11-11, à la refonte de la Tour de contrôle | Plus que 2 actions proposées, dans l'ordre : Renfort S1, Heure exceptionnelle. Le moteur sait encore annuler ces actions si elles ont été appliquées avant (base partagée avec les anciennes versions) |
 
 ## Présentation (2026-11-10)
 
 - **Simulation** : l'écran E4 s'appelle « Simulation », porte l'étiquette « Démo », et est séparé des écrans du produit dans la navigation. L'horloge simulée est encadrée en pointillés, code visuel de tout ce qui n'existe que pour la démo.
 - **Organisation** : l'écran E5 s'appelle « L'organisation » et commence par un tableau étapes × personnes (tâche majeure, priorités, charge et capacité du mois). C'est la réponse visuelle à « qui fait quoi ».
-- **Audit de périmètre, recommandations non retenues** : tour de contrôle simplifiée, retrait de « Forcer l'ordre », retrait du Journal de la navigation, retrait du badge « majeure / secondaire ». Tout cela reste en place.
+- **Audit de périmètre, recommandations non retenues** : tour de contrôle simplifiée, retrait de « Forcer l'ordre », retrait du Journal de la navigation, retrait du badge « majeure / secondaire ». Tout cela reste en place. (La Tour de contrôle et « Forcer l'ordre » ont été revus le 2026-11-11, voir plus bas.)
+
+## Tour de contrôle v2 (2026-11-11)
+
+Objectif : une personne qui remplace l'orchestrateur comprend la situation en un coup d'œil et sait quoi faire, sans connaître les règles. Mêmes règles, même calcul, même mise à jour en direct (R6) ; seule la présentation change. Maquette validée : option mixte « bulletin + chaîne de production ».
+
+- **Bandeau** : niveau (Vert, Orange, Rouge, inchangés), une phrase qui dit ce qui manque et où (pire contrôle de R9, en heures et avec le nom de l'étape), sa cause (qui peut faire l'étape, absences récentes ou à venir), offres publiées avec l'écart au plan (trajectoire de référence, à la fin de la veille), jours restants, prévision J22 (bouton, comme avant).
+- **Que faire ?** : les actions proposées, toujours dans l'ordre de R11. Chacune dit en une phrase son effet sur le pire contrôle, calculé par l'aperçu d'impact (US-18), avec une étiquette « Règle le problème », « Améliore » ou « Ne règle pas le problème ». Une action qui aide est encadrée en vert ; l'ordre ne change pas. « Déjà en place » liste les actions actives, annulables sur place.
+- **Schéma du parcours** : S1 à S5 avec leurs dépendances (R1) et le délai de 24 h (R2), qui fait chaque étape, étapes faites, offres prêtes qui attendent, avance ou manque de chaque contrôle. L'étape du pire contrôle est entourée.
+- **L'équipe aujourd'hui** : minutes faites sur le budget du jour, absence, dernière étape faite. La personne dont tout dépend (seule compétente du pire contrôle) est mise en avant.
+- **Le rythme** : courbe réel / plan en petit, avec l'écart écrit.
+- **Détail des calculs** (replié) : l'ancien tableau des 5 contrôles en minutes, les seuils et la grande courbe.
 
 ## « Mes tâches » v2 (2026-11-11)
 

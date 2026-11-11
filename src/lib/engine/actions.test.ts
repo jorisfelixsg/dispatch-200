@@ -10,7 +10,8 @@ import { defaultOffers } from "@/lib/seed/offers";
 describe("R11 — catch-up actions", () => {
   it("actions are proposed only when the global level is orange or red, always in the same order", () => {
     expect([shouldProposeActions("green"), shouldProposeActions("orange"), shouldProposeActions("red")]).toEqual([false, true, true]);
-    expect(ACTION_ORDER).toEqual(["FORCE_ORDER", "RENFORT_S1", "EXTRA_HOUR", "RERANK"]);
+    // PM 2026-11-11: « Forcer l'ordre » and « Prioriser les marchands importants » are no longer proposed.
+    expect(ACTION_ORDER).toEqual(["RENFORT_S1", "EXTRA_HOUR"]);
   });
 
   it("the concerned person is the only competent person of the worst control (Charlie for S3)", () => {
@@ -65,7 +66,7 @@ describe("R11 — catch-up actions", () => {
 });
 
 describe("R11 — proposals and one-click guards", () => {
-  it("no proposal when the global level is green; otherwise the 4 actions in order, with the concerned person pre-filled", () => {
+  it("no proposal when the global level is green; otherwise the 2 actions in order, with the concerned person pre-filled", () => {
     const green = initialState();
     const greenReport = computeControls(green);
     expect(proposeActions(green, greenReport.controls, greenReport.level)).toEqual([]);
@@ -80,11 +81,9 @@ describe("R11 — proposals and one-click guards", () => {
     }
     const report = computeControls(state);
     expect(proposeActions(state, report.controls, report.level)).toEqual([
-      { type: "FORCE_ORDER", personId: "charlie", dayIndex: null },
       { type: "RENFORT_S1", personId: null, dayIndex: null },
       // Charlie is declared absent on J5 and J6: the day pre-filled is J7.
       { type: "EXTRA_HOUR", personId: "charlie", dayIndex: 7 },
-      { type: "RERANK", personId: null, dayIndex: null },
     ]);
   });
 

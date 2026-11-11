@@ -3,6 +3,7 @@ import { failure, serviceOr503 } from "@/lib/api/http";
 import { loadWorld } from "@/lib/data/world";
 import { proposeActions } from "@/lib/engine/actions";
 import { computeControls } from "@/lib/engine/controls";
+import { computeFlow, computeTeam } from "@/lib/engine/flow";
 import { currentDay } from "@/lib/engine/state";
 import { actualCurve, computeIndicators } from "@/lib/engine/indicators";
 import type { ActiveAction, ControlResponse } from "@/lib/live/contracts";
@@ -43,6 +44,8 @@ export async function GET() {
           declaredAbsences: world.state.adjustments
             .filter((a) => a.absentDeclared)
             .map((a) => ({ personId: a.personId, dayIndex: a.dayIndex })),
+          flow: computeFlow(world.state),
+          team: computeTeam(world.state),
         },
       } satisfies ControlResponse,
       { headers: { "cache-control": "no-store" } },
