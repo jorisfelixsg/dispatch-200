@@ -116,14 +116,56 @@ export function actionTitle(type: ActionType, personId: PersonId | null): string
 
 export type EffectTag = "fix" | "better" | "none";
 
+// « Comble le manque » rather than « Règle le problème »: the global level can stay orange (or red,
+// because of another step) after the shortage on the worst step is filled.
 export const EFFECT_TAG_LABEL: Record<EffectTag, string> = {
-  fix: "Règle le problème",
+  fix: "Comble le manque",
   better: "Améliore",
   none: "Ne règle pas le problème",
 };
 
 const LEVEL_FROM: Record<Level, string> = { red: "du rouge", orange: "de l'orange", green: "du vert" };
 const LEVEL_TO: Record<Level, string> = { red: "au rouge", orange: "à l'orange", green: "au vert" };
+
+/** R10 in plain words: what an orange or red level means once an action is applied. « Point », as in
+ *  the green verdict, because the worst control can be the global one. */
+export const LEVEL_MEANING: Record<Exclude<Level, "green">, string> = {
+  orange: "plus rien ne manque, mais au moins un point a 1 h d'avance ou moins",
+  red: "au moins un point manque encore de temps",
+};
+
+/** What happens after « Appliquer », so the stand-in knows whether to act again. */
+export function levelAfterNote(levelBefore: Level, levelAfter: Level, tag: EffectTag): string {
+  if (levelAfter !== levelBefore) {
+    return levelAfter === "green"
+      ? ` Le niveau passe ${LEVEL_FROM[levelBefore]} ${LEVEL_TO[levelAfter]}.`
+      : ` Le niveau passe ${LEVEL_FROM[levelBefore]} ${LEVEL_TO[levelAfter]} : ${LEVEL_MEANING[levelAfter]}.`;
+  }
+  // The worst step is filled but another one is still short (R10: red stays red).
+  if (tag === "fix" && levelAfter === "red") return " Le niveau reste rouge : un autre point manque encore de temps.";
+  return "";
+}
+
+/** « Niveau maintenant : Orange, plus rien ne manque… », shown under the confirmation of an action. */
+export function levelNowNote(level: Level): string {
+  if (level === "green") return "Niveau maintenant : Vert, tout est dans les temps.";
+  return `Niveau maintenant : ${level === "orange" ? "Orange" : "Rouge"}, ${LEVEL_MEANING[level]}.`;
+}
+
+/** The person must agree first: the app sends nothing to the people concerned. */
+export function askFirstNote(personId: PersonId, day: number): string {
+  return `Avant d'appliquer : demander son accord à ${getDefaultPerson(personId).name} pour le J${day}. L'application n'envoie aucun message.`;
+}
+
+/** Confirmation that stays on the tower after « Appliquer » (the row itself is recalculated). */
+export function appliedNote(type: ActionType, personId: PersonId | null, day: number | null): string {
+  if (type === "EXTRA_HOUR" && personId && day !== null) {
+    const name = getDefaultPerson(personId).name;
+    return `Enregistré : ${name} a 1 h de plus le J${day}. Si ce n'est pas déjà fait, prévenir ${name} : l'application n'envoie aucun message.`;
+  }
+  if (type === "RENFORT_S1") return "Enregistré : le renfort est en place. L'onglet « Mes tâches » est maintenant ouvert pour vous.";
+  return "Enregistré : l'action est en place.";
+}
 
 /** Effect of an action on the worst control, from the impact preview (US-18), in one sentence. */
 export function actionEffect(
@@ -155,6 +197,6 @@ export function actionEffect(
         ? `L'équipe gagne du temps, mais pas pour ${target}${before < 0 ? ` : il manque toujours ${formatDuration(before)}` : ""}.`
         : `Ne change rien pour ${target}.`;
   }
-  if (levelAfter !== levelBefore) text += ` Le niveau passe ${LEVEL_FROM[levelBefore]} ${LEVEL_TO[levelAfter]}.`;
+  text += levelAfterNote(levelBefore, levelAfter, tag);
   return { tag, text };
 }

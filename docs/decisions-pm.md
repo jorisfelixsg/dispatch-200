@@ -30,6 +30,17 @@ Objectif : une personne qui remplace l'orchestrateur comprend la situation en un
 - **Le rythme** : courbe réel / plan en petit, avec l'écart écrit.
 - **Détail des calculs** (replié) : l'ancien tableau des 5 contrôles en minutes, les seuils et la grande courbe.
 
+## Tour de contrôle : moment de décision (2026-11-11)
+
+Suite de la critique Impeccable (27/40, deux problèmes P1). Textes et présentation seulement : mêmes règles, même ordre R11, rien n'est choisi à la place de l'orchestrateur.
+
+- **Plus de numéros** devant les actions (ils faisaient croire à une séquence). L'étiquette d'effet passe au-dessus du titre.
+- **Heure exceptionnelle sans personne pré-remplie** (étape partagée, par exemple S5) : Alice, Bob et Charlie sont proposés chacun avec l'effet de son heure en plus (aperçu US-18), ou « absence ce jour-là ». Aucune personne n'est présélectionnée.
+- **Prévenir la personne** : une fois la personne choisie, « Avant d'appliquer : demander son accord à Charlie pour le J7. L'application n'envoie aucun message. »
+- **Après « Appliquer »** : une confirmation reste affichée en haut de « Que faire ? » (masquable), avec le niveau du moment expliqué en clair.
+- **« Règle le problème » devient « Comble le manque »** : le niveau peut rester orange. Le texte d'effet explique désormais le niveau d'arrivée (orange : plus rien ne manque, mais au moins un point a 1 h d'avance ou moins ; rouge : un autre point manque encore de temps).
+- **Accepté, pas encore fait** : la prévision au J22 calculée automatiquement à l'ouverture.
+
 ## « Mes tâches » v2 (2026-11-11)
 
 - **Une seule carte** : le contributeur ne voit plus la liste, seulement sa première tâche (même moteur, même ordre R5 ; toute la liste reste réservée, donc pas de doublon). Une ligne annonce la suite. Le rang, la durée par tâche et le badge « majeure / secondaire » ne sont plus affichés.

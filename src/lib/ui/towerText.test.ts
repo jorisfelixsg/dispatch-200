@@ -4,7 +4,23 @@ import { computeControls, type ControlResult } from "@/lib/engine/controls";
 import { execRange, initialState } from "@/lib/engine/testing/fixtures";
 import { simAt } from "@/lib/engine/time";
 import type { WorldState } from "@/lib/engine/types";
-import { absenceNote, actionEffect, actionTitle, daysLeft, formatDuration, joinWords, marginPhrase, planGap, verdict, worstControl } from "./towerText";
+import {
+  absenceNote,
+  actionEffect,
+  actionTitle,
+  appliedNote,
+  askFirstNote,
+  daysLeft,
+  EFFECT_TAG_LABEL,
+  formatDuration,
+  joinWords,
+  levelAfterNote,
+  levelNowNote,
+  marginPhrase,
+  planGap,
+  verdict,
+  worstControl,
+} from "./towerText";
 
 /** R9 example: start of J5, 30 S3 done, Charlie declared absent on J5 and J6 → S3 margin −60. */
 function r9Example(): WorldState {
@@ -84,8 +100,24 @@ describe("Tower v2 — gap with the plan and actions", () => {
     expect(actionTitle("EXTRA_HOUR", "charlie")).toBe("Heure exceptionnelle : Charlie travaille 1 h de plus");
     expect(actionEffect("EXTRA_HOUR", worst, 0, "red", "orange", "charlie")).toEqual({
       tag: "fix",
-      text: "Charlie a alors assez de temps pour l'étape « Créer l'offre » (S3). Le niveau passe du rouge à l'orange.",
+      text: "Charlie a alors assez de temps pour l'étape « Créer l'offre » (S3). Le niveau passe du rouge à l'orange : plus rien ne manque, mais au moins un point a 1 h d'avance ou moins.",
     });
+    expect(EFFECT_TAG_LABEL.fix).toBe("Comble le manque");
+  });
+
+  it("says when the level stays red because another point is still short", () => {
+    expect(levelAfterNote("red", "red", "fix")).toBe(" Le niveau reste rouge : un autre point manque encore de temps.");
+    expect(levelAfterNote("red", "red", "better")).toBe("");
+    expect(levelAfterNote("orange", "green", "better")).toBe(" Le niveau passe de l'orange au vert.");
+    expect(levelNowNote("orange")).toBe("Niveau maintenant : Orange, plus rien ne manque, mais au moins un point a 1 h d'avance ou moins.");
+    expect(levelNowNote("green")).toBe("Niveau maintenant : Vert, tout est dans les temps.");
+  });
+
+  it("asks to warn the person: the app sends no message", () => {
+    expect(askFirstNote("charlie", 7)).toBe("Avant d'appliquer : demander son accord à Charlie pour le J7. L'application n'envoie aucun message.");
+    expect(appliedNote("EXTRA_HOUR", "charlie", 7)).toBe(
+      "Enregistré : Charlie a 1 h de plus le J7. Si ce n'est pas déjà fait, prévenir Charlie : l'application n'envoie aucun message.",
+    );
   });
 
   it("the S1 reinforcement does not change S3", () => {

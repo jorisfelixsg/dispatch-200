@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { CircleCheck, Loader2, MessageCircle, X } from "lucide-react";
 import type { ActionProposal } from "@/lib/engine/actions";
 import { BUSINESS_DAYS } from "@/lib/engine/config";
 import type { ControlResult } from "@/lib/engine/controls";
@@ -9,7 +9,17 @@ import { getDefaultPerson, type PersonId } from "@/lib/engine/people";
 import type { ActionPreview, ControlPayload } from "@/lib/live/contracts";
 import { applyActionRequest, cancelActionRequest, previewActionRequest } from "@/lib/live/actionsClient";
 import { ACTION_TITLES, describeAction } from "@/lib/ui/actionLabels";
-import { actionEffect, actionTitle, controlTarget, EFFECT_TAG_LABEL, worstControl, type EffectTag } from "@/lib/ui/towerText";
+import {
+  actionEffect,
+  actionTitle,
+  appliedNote,
+  askFirstNote,
+  controlTarget,
+  EFFECT_TAG_LABEL,
+  levelNowNote,
+  worstControl,
+  type EffectTag,
+} from "@/lib/ui/towerText";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -21,34 +31,59 @@ const TAG_CLASS: Record<EffectTag, string> = {
   none: "bg-muted text-muted-foreground",
 };
 
+const DOT_CLASS: Record<EffectTag, string> = {
+  fix: "bg-ok",
+  better: "bg-ok/50",
+  none: "bg-muted-foreground/40",
+};
+
 const selectClass =
   "h-9 rounded-md border border-border bg-card px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
-function ActionRow({ index, proposal, payload, worst }: { index: number; proposal: ActionProposal; payload: ControlPayload; worst: ControlResult }) {
+const NO_PERSON = "none";
+
+function ActionRow({
+  proposal,
+  payload,
+  worst,
+  onApplied,
+}: {
+  proposal: ActionProposal;
+  payload: ControlPayload;
+  worst: ControlResult;
+  onApplied: (note: string) => void;
+}) {
   const [personId, setPersonId] = useState<PersonId | "">(proposal.personId ?? "");
   const [day, setDay] = useState<number | null>(proposal.dayIndex);
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const today = payload.today ?? 1;
   const needsPerson = proposal.type === "EXTRA_HOUR";
+  // Several people can do the worst step: each one is offered with the effect of their extra hour,
+  // so the stand-in picks with the figures in front of them. Nothing is pre-selected (R11 unchanged).
+  const choosePerson = needsPerson && proposal.personId === null;
+  const absentOn = (id: PersonId | "", d: number) => payload.declaredAbsences.some((a) => a.personId === id && a.dayIndex === d);
   // PM decision: no extra hour on a day the chosen person is declared absent.
-  const days = Array.from({ length: BUSINESS_DAYS - today + 1 }, (_, i) => today + i).filter(
-    (d) => !payload.declaredAbsences.some((a) => a.personId === personId && a.dayIndex === d),
-  );
+  const days = Array.from({ length: BUSINESS_DAYS - today + 1 }, (_, i) => today + i).filter((d) => !absentOn(personId, d));
   const selectedDay = day !== null && days.includes(day) ? day : (days[0] ?? null);
   const alreadyActive = proposal.type === "RENFORT_S1" && payload.renfortActive;
   const ready = !alreadyActive && !(needsPerson && personId === "") && !(needsPerson && selectedDay === null);
 
-  // US-18 — impact preview, refreshed when the parameters or the state change.
-  const [preview, setPreview] = useState<ActionPreview | null>(null);
-  const previewKey = `${proposal.type}|${personId}|${needsPerson ? selectedDay : ""}|${payload.nowSim}|${payload.controls.map((c) => c.margin).join(",")}`;
+  // US-18 — impact preview of each candidate (nothing is written), refreshed when the inputs or the state change.
+  const candidates: (PersonId | null)[] = !needsPerson ? [null] : choosePerson ? CONTRIBUTORS : [proposal.personId];
+  const canPreview = !alreadyActive && (!needsPerson || selectedDay !== null);
+  const [previews, setPreviews] = useState<Record<string, ActionPreview | null>>({});
+  const previewKey = `${proposal.type}|${candidates.join(",")}|${needsPerson ? selectedDay : ""}|${payload.nowSim}|${payload.controls.map((c) => c.margin).join(",")}`;
   useEffect(() => {
-    if (!ready) return;
+    if (!canPreview) return;
     let cancelled = false;
     const timer = window.setTimeout(() => {
-      void previewActionRequest(proposal.type, needsPerson ? personId || null : null, needsPerson ? selectedDay : null).then((p) => {
-        if (!cancelled) setPreview(p);
+      const asked = candidates.filter((id) => !(id && selectedDay !== null && absentOn(id, selectedDay)));
+      void Promise.all(
+        asked.map((id) => previewActionRequest(proposal.type, id, needsPerson ? selectedDay : null).then((p) => [id ?? NO_PERSON, p] as const)),
+      ).then((entries) => {
+        if (!cancelled) setPreviews(Object.fromEntries(entries));
       });
     }, 250);
     return () => {
@@ -56,79 +91,93 @@ function ActionRow({ index, proposal, payload, worst }: { index: number; proposa
       window.clearTimeout(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- previewKey sums up the inputs
-  }, [previewKey, ready]);
+  }, [previewKey, canPreview]);
 
-  const effect =
-    ready && preview
-      ? actionEffect(
-          proposal.type,
-          worst,
-          preview.changes.find((c) => c.controlId === worst.id)?.marginAfter ?? worst.margin,
-          preview.levelBefore,
-          preview.levelAfter,
-          personId || null,
-        )
-      : null;
+  const effectFor = (id: PersonId | null) => {
+    const preview = canPreview ? previews[id ?? NO_PERSON] : null;
+    if (!preview) return null;
+    const marginAfter = preview.changes.find((c) => c.controlId === worst.id)?.marginAfter ?? worst.margin;
+    return actionEffect(proposal.type, worst, marginAfter, preview.levelBefore, preview.levelAfter, id);
+  };
+  const effect = !needsPerson ? effectFor(null) : personId !== "" ? effectFor(personId) : null;
   const helps = effect !== null && effect.tag !== "none";
 
   const apply = async () => {
     setBusy(true);
-    setMessage(null);
-    const r = await applyActionRequest(proposal.type, needsPerson ? personId || null : null, needsPerson ? selectedDay : null);
+    setError(null);
+    const who = needsPerson ? personId || null : null;
+    const when = needsPerson ? selectedDay : null;
+    const r = await applyActionRequest(proposal.type, who, when);
     setBusy(false);
-    setMessage(r.ok ? { ok: true, text: "Action appliquée : tout est recalculé." } : { ok: false, text: r.message });
+    if (r.ok) onApplied(appliedNote(proposal.type, who, when));
+    else setError(r.message);
   };
 
   return (
     <li
       className={cn(
-        "grid grid-cols-[1.75rem_minmax(0,1fr)] items-center gap-3 rounded-xl border p-3 md:grid-cols-[1.75rem_minmax(0,1fr)_auto]",
+        "grid grid-cols-1 items-center gap-3 rounded-xl border p-3 md:grid-cols-[minmax(0,1fr)_auto]",
         helps ? "border-2 border-ok bg-ok/10 py-4" : "border-border",
       )}
     >
-      <span
-        className={cn("flex size-7 items-center justify-center rounded-full font-mono text-xs", helps ? "bg-ok text-white" : "bg-muted")}
-        aria-hidden
-      >
-        {index}
-      </span>
-      <div className="min-w-0 space-y-1">
+      <div className="min-w-0 space-y-1.5">
+        {effect && (
+          <span className={cn("inline-block rounded px-2 py-0.5 text-xs font-semibold", TAG_CLASS[effect.tag])}>{EFFECT_TAG_LABEL[effect.tag]}</span>
+        )}
         <p className={cn("font-medium", helps && "text-base font-semibold md:text-lg")}>
           {actionTitle(proposal.type, needsPerson ? personId || null : null)}
-          {effect && (
-            <span className={cn("ml-2 inline-block rounded px-1.5 py-0.5 align-[2px] text-[11px] font-bold uppercase tracking-wide", TAG_CLASS[effect.tag])}>
-              {EFFECT_TAG_LABEL[effect.tag]}
-            </span>
-          )}
         </p>
         <p className={cn("text-sm", helps ? "text-foreground" : "text-muted-foreground")}>
           {alreadyActive
             ? "Déjà en place."
             : effect
               ? effect.text
-              : needsPerson && personId === ""
-                ? "Choisis la personne pour voir l'effet."
+              : choosePerson && personId === ""
+                ? "Choisir la personne : l'effet de son heure en plus est indiqué pour chacune."
                 : "Calcul de l'effet…"}
         </p>
-        {message && (
-          <p role="status" className={cn("text-sm", message.ok ? "text-ok" : "text-danger")}>
-            {message.text}
+        {choosePerson && !alreadyActive && (
+          <div role="radiogroup" aria-label="Personne" className="flex flex-wrap gap-2 pt-1">
+            {CONTRIBUTORS.map((id) => {
+              const absent = selectedDay !== null && absentOn(id, selectedDay);
+              const e = absent ? null : effectFor(id);
+              const selected = personId === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  disabled={absent}
+                  onClick={() => setPersonId(id)}
+                  className={cn(
+                    "flex items-center gap-2 rounded-lg border bg-card px-3 py-1.5 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60",
+                    selected ? "border-primary ring-1 ring-primary" : "border-border hover:bg-muted",
+                  )}
+                >
+                  <span className={cn("size-2 shrink-0 rounded-full", e ? DOT_CLASS[e.tag] : "bg-border")} aria-hidden />
+                  <span className="font-medium">{getDefaultPerson(id).name}</span>
+                  <span className="text-muted-foreground">
+                    {absent ? "absence ce jour-là" : e ? EFFECT_TAG_LABEL[e.tag].toLowerCase() : "calcul…"}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+        {needsPerson && personId !== "" && selectedDay !== null && !alreadyActive && (
+          <p className="flex items-start gap-1.5 text-sm text-foreground">
+            <MessageCircle className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
+            {askFirstNote(personId, selectedDay)}
+          </p>
+        )}
+        {error && (
+          <p role="status" className="text-sm text-danger">
+            {error}
           </p>
         )}
       </div>
-      <div className="col-start-2 flex flex-wrap items-center gap-2 md:col-start-3 md:justify-end">
-        {needsPerson && proposal.personId === null && (
-          <select aria-label="Personne" value={personId} onChange={(e) => setPersonId(e.target.value as PersonId)} className={selectClass}>
-            <option value="" disabled>
-              Qui ?
-            </option>
-            {CONTRIBUTORS.map((id) => (
-              <option key={id} value={id}>
-                {getDefaultPerson(id).name}
-              </option>
-            ))}
-          </select>
-        )}
+      <div className="flex flex-wrap items-center gap-2 md:justify-end">
         {needsPerson && (
           <select
             aria-label="Jour"
@@ -197,6 +246,8 @@ export function ActionsPanel({ payload }: { payload: ControlPayload }) {
   const found = worstControl(payload.controls);
   // Proposals exist only when the level is orange or red (R11).
   const worst = payload.proposals.length > 0 ? found : null;
+  // Kept at panel level: after « Appliquer » the rows are recalculated (and vanish when the level turns green).
+  const [applied, setApplied] = useState<string | null>(null);
 
   return (
     <section className="space-y-3 rounded-2xl border border-border bg-card p-4 md:p-5">
@@ -204,12 +255,29 @@ export function ActionsPanel({ payload }: { payload: ControlPayload }) {
         <h2 className="text-lg font-semibold">{worst ? `Que faire pour ${controlTarget(worst.id)} ?` : "Que faire ?"}</h2>
         {worst && <span className="text-xs text-muted-foreground">Effet de chaque action calculé en direct</span>}
       </div>
+      {applied && (
+        <div role="status" className="flex items-start gap-2 rounded-xl border border-border bg-muted/60 p-3 text-sm">
+          <CircleCheck className="mt-0.5 size-4 shrink-0 text-ok" aria-hidden />
+          <div className="min-w-0 flex-1 space-y-0.5">
+            <p className="font-medium">{applied}</p>
+            <p className="text-muted-foreground">{levelNowNote(payload.level)}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setApplied(null)}
+            aria-label="Masquer ce message"
+            className="rounded p-0.5 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <X className="size-4" aria-hidden />
+          </button>
+        </div>
+      )}
       {!worst ? (
-        <p className="text-sm text-muted-foreground">Rien pour l&apos;instant : tout est dans les temps, aucune action n&apos;est proposée.</p>
+        !applied && <p className="text-sm text-muted-foreground">Rien pour l&apos;instant : tout est dans les temps, aucune action n&apos;est proposée.</p>
       ) : (
         <ol className="space-y-2">
-          {payload.proposals.map((p, i) => (
-            <ActionRow key={`${p.type}:${p.personId ?? ""}:${p.dayIndex ?? ""}`} index={i + 1} proposal={p} payload={payload} worst={worst} />
+          {payload.proposals.map((p) => (
+            <ActionRow key={`${p.type}:${p.personId ?? ""}:${p.dayIndex ?? ""}`} proposal={p} payload={payload} worst={worst} onApplied={setApplied} />
           ))}
         </ol>
       )}
