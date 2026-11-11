@@ -12,6 +12,7 @@ Ces décisions ont été prises pendant la construction du MVP (2026-11-09 et 20
 | Écran E3 « Suivi des offres » pour les contributeurs (section 4) | Retiré le 2026-11-10 : un contributeur ne voit plus que « Mes tâches » | E3 reste pour l'orchestrateur |
 | Niveau global et profils « En ligne » dans la barre du haut des contributeurs (section 4, US-20) | Retirés le 2026-11-10 : ils ne peuvent pas agir dessus | Visibles par l'orchestrateur seulement |
 | Actions de rattrapage « Forcer l'ordre » et « Prioriser les marchands importants » (R11) | Retirées le 2026-11-11, à la refonte de la Tour de contrôle | Plus que 2 actions proposées, dans l'ordre : Renfort S1, Heure exceptionnelle. Le moteur sait encore annuler ces actions si elles ont été appliquées avant (base partagée avec les anciennes versions) |
+| Action de rattrapage « Renfort S1 » (R11) | Retirée le 2026-11-11 : le PM n'en voit pas l'utilité | Seule l'heure exceptionnelle est proposée. Le scénario de démo donne toujours 200 / 200 avec l'heure de Charlie au J7 (190 sans action). Un renfort déjà actif reste visible dans L'organisation et reste annulable |
 
 ## Présentation (2026-11-10)
 
@@ -39,7 +40,7 @@ Suite de la critique Impeccable (27/40, deux problèmes P1). Textes et présenta
 - **Prévenir la personne** : une fois la personne choisie, « Avant d'appliquer : demander son accord à Charlie pour le J7. L'application n'envoie aucun message. »
 - **Après « Appliquer »** : une confirmation reste affichée en haut de « Que faire ? » (masquable), avec le niveau du moment expliqué en clair.
 - **« Règle le problème » devient « Comble le manque »** : le niveau peut rester orange. Le texte d'effet explique désormais le niveau d'arrivée (orange : plus rien ne manque, mais au moins un point a 1 h d'avance ou moins ; rouge : un autre point manque encore de temps).
-- **Prévision au J22 automatique** : finalement abandonnée (PM, 2026-11-11), le bouton « Calculer » reste.
+- **Prévision au J22 automatique** : d'abord abandonnée, puis reprise (PM, 2026-11-11) : calculée à l'ouverture de la tour et après chaque changement de l'état, sans bouton.
 
 ## Tour de contrôle : retouches P2 (2026-11-11)
 

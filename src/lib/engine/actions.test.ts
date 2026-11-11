@@ -10,8 +10,8 @@ import { defaultOffers } from "@/lib/seed/offers";
 describe("R11 — catch-up actions", () => {
   it("actions are proposed only when the global level is orange or red, always in the same order", () => {
     expect([shouldProposeActions("green"), shouldProposeActions("orange"), shouldProposeActions("red")]).toEqual([false, true, true]);
-    // PM 2026-11-11: « Forcer l'ordre » and « Prioriser les marchands importants » are no longer proposed.
-    expect(ACTION_ORDER).toEqual(["RENFORT_S1", "EXTRA_HOUR"]);
+    // PM 2026-11-11: « Forcer l'ordre », « Prioriser les marchands importants » and « Renfort S1 » are no longer proposed.
+    expect(ACTION_ORDER).toEqual(["EXTRA_HOUR"]);
   });
 
   it("the concerned person is the only competent person of the worst control (Charlie for S3)", () => {
@@ -81,7 +81,6 @@ describe("R11 — proposals and one-click guards", () => {
     }
     const report = computeControls(state);
     expect(proposeActions(state, report.controls, report.level)).toEqual([
-      { type: "RENFORT_S1", personId: null, dayIndex: null },
       // Charlie is declared absent on J5 and J6: the day pre-filled is J7.
       { type: "EXTRA_HOUR", personId: "charlie", dayIndex: 7 },
     ]);

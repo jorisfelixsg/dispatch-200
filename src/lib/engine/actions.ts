@@ -10,11 +10,11 @@ import type { DayAdjustment, Person, WorldState } from "./types";
 export type ActionType = "FORCE_ORDER" | "RENFORT_S1" | "EXTRA_HOUR" | "RERANK";
 
 /**
- * R11 — actions are always proposed in this order. « Forcer l'ordre » and « Prioriser les marchands
- * importants » are no longer proposed (PM, 2026-11-11); the engine still knows them so that actions
- * applied before can be cancelled (the database is shared with older versions).
+ * R11 — actions are always proposed in this order. « Forcer l'ordre », « Prioriser les marchands
+ * importants » and « Renfort S1 » are no longer proposed (PM, 2026-11-11); the engine still knows them
+ * so that actions applied before can be cancelled (the database is shared with older versions).
  */
-export const ACTION_ORDER: readonly ActionType[] = ["RENFORT_S1", "EXTRA_HOUR"];
+export const ACTION_ORDER: readonly ActionType[] = ["EXTRA_HOUR"];
 
 export type Action =
   | { type: "FORCE_ORDER"; personId: PersonId; sequence?: Step[] }

@@ -58,7 +58,9 @@ export function TowerHero({ payload }: { payload: ControlPayload }) {
           </p>
           <span className="text-xs text-muted-foreground">{payload.indicators.endOfMonth ? "Fin du mois" : "aujourd'hui compris"}</span>
         </div>
-        <ProjectionKpi safetyDeadline={payload.level === "green" ? null : (worstControl(payload.controls)?.deadlineDay ?? null)} />
+        <ProjectionKpi
+          stateKey={`${payload.nowSim}|${payload.indicators.published}|${payload.controls.map((c) => c.margin).join(",")}`}
+          safetyDeadline={payload.level === "green" ? null : (worstControl(payload.controls)?.deadlineDay ?? null)} />
       </div>
     </section>
   );

@@ -11,8 +11,8 @@ Démo en ligne : https://dispatch-200.vercel.app
 | Écran | Qui | Contenu |
 |---|---|---|
 | E0 Accueil | Tous | Choix du profil (mémorisé dans le navigateur) |
-| E1 Mes tâches | Contributeurs (et l'orchestrateur si le renfort S1 est actif) | Une seule carte à la fois : la prochaine tâche du plan et sa fiche (champs à copier), bouton « Fait » puis « Annuler » pendant 2 s, budget restant, déclaration d'absence |
-| E2 Tour de contrôle | Orchestrateur | Lisible par un remplaçant : phrase-verdict et cause, retard sur le plan, « Que faire ? » (2 actions et leur effet en clair), schéma du parcours d'une offre et de l'étape qui bloque, l'équipe du jour, le rythme ; détail des 5 contrôles replié |
+| E1 Mes tâches | Contributeurs | Une seule carte à la fois : la prochaine tâche du plan et sa fiche (champs à copier), bouton « Fait » puis « Annuler » pendant 2 s, budget restant, déclaration d'absence |
+| E2 Tour de contrôle | Orchestrateur | Lisible par un remplaçant : phrase-verdict et cause, retard sur le plan, prévision au J22 calculée automatiquement, « Que faire ? » (heure exceptionnelle et son effet en clair), schéma du parcours d'une offre et de l'étape qui bloque, l'équipe du jour, le rythme ; détail des 5 contrôles replié |
 | E3 Suivi des offres | Orchestrateur | Les 200 offres, étape par étape, recherche, filtres |
 | E4 Simulation (démo) | Orchestrateur | +1h, +2h, jour suivant, aller au début de Jx, mode auto, reset. N'existe que pour la démo, signalé en pointillés |
 | E5 Organisation | Orchestrateur | Qui fait quoi (étapes × personnes, tâche majeure, priorités, charge et capacité du mois), absences, heures exceptionnelles, actions appliquées (annulables) |
@@ -33,10 +33,10 @@ fenêtre de navigation privée, ou un téléphone). Chaque fenêtre garde son pr
 | 1:30 | Orchestrateur | **Simulation › Jour suivant** | Les budgets reviennent à 60 min, en direct, chez chacun |
 | 2:00 | Orchestrateur | **Simulation › Réinitialiser la démo**, puis **Jouer jusqu'au début de J5** | Le mode auto joue J1 à J4 ; la tour montre 30 S3 faits, marge S3 +60, niveau Orange (l'exemple de la règle R9). Dans **Suivi des offres**, la colonne « S5 possible à partir de » affiche J5 09:51, J5 09:54… : la règle des 24h après S4 |
 | 2:45 | Charlie | **Déclarer une absence** pour J5, puis J6 | Marge S3 0, puis −60 ; S5 passe aussi en négatif : niveau **Rouge** dans la barre du haut de l'orchestrateur |
-| 3:15 | Orchestrateur | **Tour de contrôle** : le bandeau dit ce qui manque et pourquoi ; **Prévision au J22 › Calculer** | Sans réaction, la fin du mois tombe vers 180–190 offres publiées. Le schéma entoure l'étape qui bloque |
-| 3:30 | Orchestrateur | **Que faire ?** | 2 actions, chacune avec son effet en une phrase. Le pire contrôle (S5) est partagé : choisir **Charlie**. Appliquer **Heure exceptionnelle** (Charlie, J7) : S3 −60 → 0. Appliquer **Renfort** : l'onglet « Mes tâches » apparaît pour l'orchestrateur |
+| 3:15 | Orchestrateur | **Tour de contrôle** : le bandeau dit ce qui manque et pourquoi ; la **Prévision au J22** se calcule toute seule | Sans réaction, la fin du mois tombe vers 180–190 offres publiées. Le schéma entoure l'étape qui bloque |
+| 3:30 | Orchestrateur | **Que faire ?** | L'heure exceptionnelle, avec son effet en une phrase pour chaque personne. Le pire contrôle (S5) est partagé : choisir **Charlie**. Appliquer **Heure exceptionnelle** (Charlie, J7) : S3 −60 → 0, et la prévision se recalcule |
 | 4:00 | Orchestrateur | **Organisation**, puis **Journal** | Qui fait quoi et dans quel ordre, les absences, les actions actives (annulables d'un clic) ; le journal trace actions, absences, horloge et étapes |
-| 4:30 | Orchestrateur | **Simulation › Jouer jusqu'au début de J23 (fin du mois)** | Avec les deux actions : **200 / 200** publiées (sans action : 190 / 200, l'absence de Charlie coûte 10 offres). Puis **Réinitialiser la démo** |
+| 4:30 | Orchestrateur | **Simulation › Jouer jusqu'au début de J23 (fin du mois)** | Avec l'heure exceptionnelle : **200 / 200** publiées (sans action : 190 / 200, l'absence de Charlie coûte 10 offres). Puis **Réinitialiser la démo** |
 
 Le reset de 2:00 garantit un scénario reproductible : le mode auto utilise la graine 42, et même départ donne même
 résultat (les clics manuels faits avant changeraient légèrement le résultat final). Depuis l'état initial, sans absence, la fin du

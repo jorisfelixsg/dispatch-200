@@ -267,14 +267,15 @@ export function TeamScreen() {
 
       <OrganisationTable people={people} renfortActive={renfort.active} />
 
-      <div className="rounded-xl border border-border bg-card p-4 text-sm">
-        <p className="font-medium">Renfort externe sur S1</p>
-        <p className="text-muted-foreground">
-          {renfort.active
-            ? `Actif depuis J${renfort.sinceDay ?? "?"} : l'orchestrateur fait des S1, ${renfort.budgetPerDay} min par jour (écran « Mes tâches »).`
-            : "Inactif. Il s'active depuis les actions de rattrapage de la tour de contrôle."}
-        </p>
-      </div>
+      {/* « Renfort S1 » is no longer proposed (PM, 2026-11-11): shown only while an older one is still active. */}
+      {renfort.active && (
+        <div className="rounded-xl border border-border bg-card p-4 text-sm">
+          <p className="font-medium">Renfort externe sur S1</p>
+          <p className="text-muted-foreground">
+            {`Actif depuis J${renfort.sinceDay ?? "?"} : l'orchestrateur fait des S1, ${renfort.budgetPerDay} min par jour (écran « Mes tâches »).`}
+          </p>
+        </div>
+      )}
 
       <h2 className="text-lg font-semibold">Disponibilités</h2>
       <ul className="grid gap-3 lg:grid-cols-2">
