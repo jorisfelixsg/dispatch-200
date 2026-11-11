@@ -82,7 +82,7 @@ export function FlowDiagram({ payload }: { payload: ControlPayload }) {
         </text>
         {control ? (
           <text x={x + 16} y={y + 108} fontSize={12} fontWeight={hot ? 700 : 600} style={{ fill: LEVEL_VAR[control.level] }}>
-            {marginPhrase(control.margin).replace(/^./, (c) => c.toUpperCase())}
+            {control.need === 0 ? "Fait" : marginPhrase(control.margin).replace(/^./, (c) => c.toUpperCase())}
           </text>
         ) : (
           <text x={x + 16} y={y + 108} fontSize={12} style={{ fill: "var(--muted-foreground)" }}>
@@ -122,7 +122,7 @@ export function FlowDiagram({ payload }: { payload: ControlPayload }) {
           role="img"
           aria-label={`Parcours d'une offre : S1 et S2 avant S3, S2 avant S4, S3 et S4 avant S5. ${flow.ready.S3} offres attendent S3, ${flow.ready.S4} attendent S4, ${flow.ready.S5} attendent S5, ${flow.waiting24h} dans le délai de 24 h. ${controls
             .filter((c) => c.id !== "global")
-            .map((c) => `${c.id} : ${marginPhrase(c.margin)}`)
+            .map((c) => `${c.id} : ${c.need === 0 ? "fait" : marginPhrase(c.margin)}`)
             .join(", ")}.${hotStep ? ` ${hotStep} : ${worst!.level === "red" ? "ça bloque ici" : "point le plus juste"}.` : ""}`}
         >
           <defs>
@@ -147,7 +147,7 @@ export function FlowDiagram({ payload }: { payload: ControlPayload }) {
               <text x={980} y={372} fontSize={12} textAnchor="end" style={{ fill: "var(--muted-foreground)" }}>
                 Toute l&apos;équipe, toutes étapes :{" "}
                 <tspan fontWeight={600} style={{ fill: LEVEL_VAR[global.level] }}>
-                  {marginPhrase(global.margin)}
+                  {global.need === 0 ? "tout est fait" : marginPhrase(global.margin)}
                 </tspan>
               </text>
             )}

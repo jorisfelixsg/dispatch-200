@@ -3,7 +3,8 @@ import { declareAbsence } from "./absences";
 import { applyAction } from "./actions";
 import { computeControl, computeControls, levelOf, worstLevel } from "./controls";
 import { execRange, initialState } from "./testing/fixtures";
-import { simAt } from "./time";
+import type { Step } from "./config";
+import { SIM_END, simAt } from "./time";
 import type { WorldState } from "./types";
 
 function absent(state: WorldState, personId: "alice" | "bob" | "charlie", ...days: number[]): WorldState {
@@ -80,5 +81,20 @@ describe("R10 — levels", () => {
 
   it("R10 example: margins +540, 0, +600, +240, +360 → global orange", () => {
     expect(worstLevel([540, 0, 600, 240, 360].map(levelOf))).toBe("orange");
+  });
+});
+
+describe("R10 — a step with nothing left to do (PM 2026-11-11)", () => {
+  const ALL: readonly Step[] = ["S1", "S2", "S3", "S4", "S5"];
+
+  it("end of month, everything done: every control is green (not 0 vs 0 = orange)", () => {
+    const report = computeControls(initialState({ nowSim: SIM_END, executions: execRange(1, 200, ALL) }));
+    expect(report.controls.map((c) => [c.need, c.level])).toEqual(Array(5).fill([0, "green"]));
+    expect(report.level).toBe("green");
+  });
+
+  it("J20, every S2 done: S2 stays green after its J19 deadline", () => {
+    const state = initialState({ nowSim: simAt(20, 480), executions: execRange(1, 200, ["S1", "S2"]) });
+    expect(computeControl(state, "S2")).toMatchObject({ need: 0, capacity: 0, level: "green" });
   });
 });

@@ -4,7 +4,7 @@ import { ACTION_ORDER, applyAction, checkAction, concernedPerson, proposeActions
 import { computeControls } from "./controls";
 import { getPerson, initialWorldState } from "./state";
 import { execRange, initialState } from "./testing/fixtures";
-import { simAt } from "./time";
+import { SIM_END, simAt } from "./time";
 import { defaultOffers } from "@/lib/seed/offers";
 
 describe("R11 — catch-up actions", () => {
@@ -100,5 +100,20 @@ describe("R11 — proposals and one-click guards", () => {
     const state = initialWorldState(defaultOffers());
     expect(checkAction(state, { type: "RERANK" })).toBeNull();
     expect(checkAction(applyAction(state, { type: "RERANK" }), { type: "RERANK" })).toBe("already_ranked");
+  });
+});
+
+describe("R11 — end of month (PM 2026-11-11)", () => {
+  it("proposes nothing and refuses an extra hour on J22 once the month is over", () => {
+    const state = initialState({ nowSim: SIM_END, executions: execRange(1, 190, ["S1", "S2", "S3", "S4", "S5"]) });
+    const report = computeControls(state);
+    expect(report.level).toBe("red");
+    expect(proposeActions(state, report.controls, report.level)).toEqual([]);
+    expect(checkAction(state, { type: "EXTRA_HOUR", personId: "alice", dayIndex: 22 })).toBe("past_day");
+  });
+
+  it("a step with nothing left to do is never the concerned step", () => {
+    const state = initialState({ nowSim: simAt(20, 480), executions: execRange(1, 200, ["S1", "S2"]) });
+    expect(concernedPerson(computeControls(state).controls)).not.toBe("alice");
   });
 });

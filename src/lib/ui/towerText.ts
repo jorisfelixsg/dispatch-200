@@ -2,7 +2,7 @@
 // with no training understands the situation. Pure display: no business rule is added here.
 
 import type { ActionType } from "@/lib/engine/actions";
-import { BUSINESS_DAYS, type Step } from "@/lib/engine/config";
+import { BUSINESS_DAYS, OFFER_COUNT, type Step } from "@/lib/engine/config";
 import type { ControlResult, Level } from "@/lib/engine/controls";
 import { getDefaultPerson, type PersonId } from "@/lib/engine/people";
 import { STEP_NAMES } from "./steps";
@@ -38,10 +38,12 @@ export function controlTarget(id: ControlResult["id"]): string {
   return id === "global" ? "l'ensemble du travail" : `l'étape « ${STEP_NAMES[id as Step]} » (${id})`;
 }
 
-/** Same tie-break as the engine (R11): lowest margin, first in S2, S3, S4, S5, global order. */
+/** Same rule as the engine (R11): lowest margin, first in S2, S3, S4, S5, global order; a step with
+ *  nothing left to do is skipped (PM 2026-11-11). Null when everything is done. */
 export function worstControl(controls: readonly ControlResult[]): ControlResult | null {
-  if (controls.length === 0) return null;
-  return controls.reduce((w, c) => (c.margin < w.margin ? c : w));
+  const open = controls.filter((c) => c.need > 0);
+  if (open.length === 0) return null;
+  return open.reduce((w, c) => (c.margin < w.margin ? c : w));
 }
 
 export function daysLeft(today: number): number {
@@ -65,9 +67,20 @@ export function verdict(
   level: Level,
   absentDaysOf: (id: PersonId) => readonly number[],
   today: number,
+  endOfMonth = false,
+  published = 0,
 ): Verdict {
+  if (controls.length === 0) return { headline: "Calcul en cours.", cause: "" };
+  // PM 2026-11-11: once the month is over, the tower only says how it ended.
+  if (endOfMonth) {
+    const missing = OFFER_COUNT - published;
+    return {
+      headline: `Mois terminé : ${published} / ${OFFER_COUNT} offres publiées.`,
+      cause: missing > 0 ? `${missing} offre${missing > 1 ? "s ne sont pas sorties" : " n'est pas sortie"} à temps.` : "Toutes les offres sont sorties à temps.",
+    };
+  }
   const worst = worstControl(controls);
-  if (!worst) return { headline: "Calcul en cours.", cause: "" };
+  if (!worst) return { headline: "Tout est fait.", cause: "Toutes les étapes de toutes les offres sont faites." };
   const target = controlTarget(worst.id);
   if (level === "green") {
     return {
@@ -93,12 +106,19 @@ export function verdict(
   return { headline, cause };
 }
 
-/** Published offers compared with the reference trajectory, at the end of yesterday. */
-export function planGap(actual: readonly number[], reference: readonly number[] | null, today: number): { day: number; planned: number; gap: number } | null {
-  if (!reference || today < 2) return null;
-  const i = today - 2;
+/** Published offers compared with the reference trajectory, at the end of yesterday (at the end of
+ *  J22 once the month is over, PM 2026-11-11). */
+export function planGap(
+  actual: readonly number[],
+  reference: readonly number[] | null,
+  today: number,
+  endOfMonth = false,
+): { day: number; planned: number; gap: number } | null {
+  const day = endOfMonth ? today : today - 1;
+  if (!reference || day < 1) return null;
+  const i = day - 1;
   if (actual[i] === undefined || reference[i] === undefined) return null;
-  return { day: today - 1, planned: reference[i], gap: reference[i] - actual[i] };
+  return { day, planned: reference[i], gap: reference[i] - actual[i] };
 }
 
 export function actionTitle(type: ActionType, personId: PersonId | null): string {

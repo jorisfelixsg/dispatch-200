@@ -75,7 +75,10 @@ export function worstLevel(levels: readonly Level[]): Level {
 
 function result(id: ControlId, need: number, capacity: number, competent: PersonId[]): ControlResult {
   const margin = capacity - need;
-  return { id, deadlineDay: CONTROL_DEADLINES[id], need, capacity, margin, marginDays: margin / 60, level: levelOf(margin), competent };
+  // PM 2026-11-11: a step with nothing left to do is done, hence green, even when no capacity is left
+  // (after its deadline or at the end of the month, the literal R10 reading gave 0 vs 0 = orange).
+  const level = need === 0 ? "green" : levelOf(margin);
+  return { id, deadlineDay: CONTROL_DEADLINES[id], need, capacity, margin, marginDays: margin / 60, level, competent };
 }
 
 export function computeControl(state: WorldState, id: ControlId): ControlResult {

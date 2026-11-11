@@ -18,8 +18,9 @@ const HERO: Record<Level, string> = {
 export function TowerHero({ payload }: { payload: ControlPayload }) {
   const today = payload.today ?? BUSINESS_DAYS;
   const absentDaysOf = (id: PersonId) => payload.team.find((m) => m.personId === id)?.absentDays ?? [];
-  const v = verdict(payload.controls, payload.level, absentDaysOf, today);
-  const gap = planGap(payload.actualCurve, payload.referenceCurve, today);
+  const { endOfMonth, published } = payload.indicators;
+  const v = verdict(payload.controls, payload.level, absentDaysOf, today, endOfMonth, published);
+  const gap = planGap(payload.actualCurve, payload.referenceCurve, today, endOfMonth);
 
   return (
     <section className={cn("grid gap-5 rounded-2xl border p-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-center", HERO[payload.level])}>

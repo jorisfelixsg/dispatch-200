@@ -56,6 +56,8 @@ Plus petit changement à chaque fois (PM : pas de sur-ingénierie).
 - **Prévision au J22 retirée (US-17, COULD)** : elle contredisait le niveau dans les deux sens (Rouge avec une prévision à 200 à cause de l'échéance J20 du logo, Vert avec une prévision à 195 parce que les contrôles ne voient pas les temps morts). Le PM garde un seul indicateur : les contrôles R9 et le niveau R10, qui disent quoi faire et donnent l'effet exact d'une action. Le moteur garde la projection (`engine/projection.ts`, testée), elle n'est plus affichée ; la route `/api/projection` est supprimée.
 - **Limites acceptées du niveau** : trop prudent en fin de mois (échéance S4 au J20), un peu optimiste quand Charlie passe du temps sur S1 et S5 (hypothèse 9).
 - **Actions sans effet repliées** : les actions qui ne changent rien pour l'étape en manque sont cachées derrière « Voir les actions sans effet sur ce manque ». Si aucune action n'aide, le bloc le dit en une phrase. Une action dont on a changé la personne ou le jour reste affichée.
+- **Étape terminée = verte (lecture de R10)** : une étape où il ne reste rien à faire est verte, même sans capacité restante. La lecture littérale donnait 0 contre 0, donc Orange, après l'échéance d'une étape finie (S2 dès le J20) et à la fin du mois. Une étape terminée n'est jamais « le point le plus juste » et le schéma affiche « Fait ».
+- **Fin du mois (J22 19:00)** : le bandeau dit « Mois terminé : X / 200 offres publiées » ; l'écart au plan est pris à la fin du J22 et non plus du J21 ; plus aucune action n'est proposée ni acceptée, y compris une heure exceptionnelle le J22 ; personne n'est marqué « tout dépend de cette personne ».
 
 ## « Mes tâches » v2 (2026-11-11)
 

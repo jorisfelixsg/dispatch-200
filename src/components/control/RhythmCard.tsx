@@ -13,7 +13,7 @@ const MONO = "var(--font-geist-mono), ui-monospace, monospace";
 export function RhythmCard({ payload }: { payload: ControlPayload }) {
   const { actualCurve: actual, referenceCurve: reference } = payload;
   const today = payload.today ?? BUSINESS_DAYS;
-  const gap = planGap(actual, reference, today);
+  const gap = planGap(actual, reference, today, payload.indicators.endOfMonth);
   const last = actual.length;
   const published = payload.indicators.published;
 

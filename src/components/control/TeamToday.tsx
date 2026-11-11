@@ -25,7 +25,7 @@ function status(m: TeamMember, today: number): string {
 /** Tower v2 — how each person's day is going (R4, R12); the person everything depends on comes first. */
 export function TeamToday({ payload }: { payload: ControlPayload }) {
   const today = payload.today ?? BUSINESS_DAYS;
-  const key = payload.level === "green" ? null : concernedPerson(payload.controls);
+  const key = payload.level === "green" || payload.indicators.endOfMonth ? null : concernedPerson(payload.controls);
   const members = [...payload.team].sort((a, b) => Number(b.personId === key) - Number(a.personId === key));
   const upcoming = payload.team.some((m) => m.absentDays.some((d) => d > today));
 

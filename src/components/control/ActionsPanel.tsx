@@ -304,7 +304,13 @@ export function ActionsPanel({ payload }: { payload: ControlPayload }) {
         </div>
       )}
       {!worst ? (
-        !applied && <p className="text-sm text-muted-foreground">Rien pour l&apos;instant : tout est dans les temps, aucune action n&apos;est proposée.</p>
+        !applied && (
+          <p className="text-sm text-muted-foreground">
+            {payload.indicators.endOfMonth
+              ? "Le mois est terminé : plus aucune action n'est possible."
+              : "Rien pour l'instant : tout est dans les temps, aucune action n'est proposée."}
+          </p>
+        )
       ) : (
         <>
           {nothingHelps && (

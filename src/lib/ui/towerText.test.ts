@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { declareAbsence } from "@/lib/engine/absences";
 import { computeControls, type ControlResult } from "@/lib/engine/controls";
 import { execRange, initialState } from "@/lib/engine/testing/fixtures";
-import { simAt } from "@/lib/engine/time";
+import { SIM_END, simAt } from "@/lib/engine/time";
 import type { WorldState } from "@/lib/engine/types";
 import {
   absenceNote,
@@ -133,5 +133,36 @@ describe("Tower v2 — gap with the plan and actions", () => {
     expect(actionEffect("EXTRA_HOUR", worst, -60, "red", "red", "charlie").text).toBe(
       "Ça aide, mais il manquera encore 1 h pour l'étape « Créer l'offre » (S3).",
     );
+  });
+});
+
+describe("Tower — steps done and end of month (PM 2026-11-11)", () => {
+  const ALL = ["S1", "S2", "S3", "S4", "S5"] as const;
+
+  it("end of month: says how the month ended, nothing else", () => {
+    const done = computeControls(initialState({ nowSim: SIM_END, executions: execRange(1, 200, ALL) }));
+    expect(verdict(done.controls, done.level, () => [], 22, true, 200)).toEqual({
+      headline: "Mois terminé : 200 / 200 offres publiées.",
+      cause: "Toutes les offres sont sorties à temps.",
+    });
+    const short = computeControls(initialState({ nowSim: SIM_END, executions: execRange(1, 190, ALL) }));
+    expect(verdict(short.controls, short.level, () => [], 22, true, 190).cause).toBe("10 offres ne sont pas sorties à temps.");
+  });
+
+  it("everything done before the end of the month", () => {
+    const { controls, level } = computeControls(initialState({ nowSim: simAt(21, 480), executions: execRange(1, 200, ALL) }));
+    expect(verdict(controls, level, () => [], 21).headline).toBe("Tout est fait.");
+  });
+
+  it("a step with nothing left to do is never the worst control", () => {
+    const { controls } = computeControls(initialState({ nowSim: simAt(20, 480), executions: execRange(1, 200, ["S1", "S2"]) }));
+    expect(worstControl(controls)?.id).not.toBe("S2");
+  });
+
+  it("end of month: the gap with the plan is taken at the end of J22, not J21", () => {
+    const actual = [...Array(20).fill(100), 180, 200];
+    const reference = [...Array(20).fill(100), 200, 200];
+    expect(planGap(actual, reference, 22)).toEqual({ day: 21, planned: 200, gap: 20 });
+    expect(planGap(actual, reference, 22, true)).toEqual({ day: 22, planned: 200, gap: 0 });
   });
 });

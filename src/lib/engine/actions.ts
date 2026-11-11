@@ -1,6 +1,7 @@
 // R11 — Catch-up actions: one-click effect, logged, and cancellable.
 // Action 3 « Former un remplaçant » was removed by the PM (2026-11-09).
 
+import { isEndOfMonth } from "./clock";
 import { BUSINESS_DAYS, EXTRA_HOUR_MIN, RENFORT_S1_BUDGET, type Step } from "./config";
 import type { ControlResult, Level } from "./controls";
 import type { PersonId } from "./people";
@@ -33,8 +34,10 @@ export function shouldProposeActions(level: Level): boolean {
  * the orchestrator chooses.
  */
 export function concernedPerson(controls: readonly ControlResult[]): PersonId | null {
-  if (controls.length === 0) return null;
-  const worst = controls.reduce((w, c) => (c.margin < w.margin ? c : w));
+  // PM 2026-11-11: a step with nothing left to do is never the worst control.
+  const open = controls.filter((c) => c.need > 0);
+  if (open.length === 0) return null;
+  const worst = open.reduce((w, c) => (c.margin < w.margin ? c : w));
   if (worst.id === "global" || worst.competent.length !== 1) return null;
   return worst.competent[0];
 }
@@ -116,7 +119,8 @@ function firstPresentDay(state: WorldState, personId: PersonId | null, from: num
 
 /** R11 — proposals shown when the global level is orange or red, always in ACTION_ORDER. */
 export function proposeActions(state: WorldState, controls: readonly ControlResult[], level: Level): ActionProposal[] {
-  if (!shouldProposeActions(level)) return [];
+  // PM 2026-11-11: nothing is proposed once the month is over, there is no day left to act on.
+  if (!shouldProposeActions(level) || isEndOfMonth(state.nowSim)) return [];
   const person = concernedPerson(controls);
   const today = currentDay(state);
   return ACTION_ORDER.map((type) => ({
@@ -154,7 +158,8 @@ export function checkAction(state: WorldState, action: Action): ActionRefusal | 
       return state.renfortS1.active ? "already_active" : null;
     case "EXTRA_HOUR": {
       const today = currentDay(state);
-      if (today === null || action.dayIndex < today) return "past_day";
+      // PM 2026-11-11: once the month is over (J22 19:00), J22 is past too.
+      if (today === null || action.dayIndex < today || isEndOfMonth(state.nowSim)) return "past_day";
       // PM decision (2026-11-09): no extra hour on a day the person is declared absent.
       return isDeclaredAbsent(state, action.personId, action.dayIndex) ? "absent_that_day" : null;
     }
