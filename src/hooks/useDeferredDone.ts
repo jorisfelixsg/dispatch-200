@@ -14,7 +14,8 @@ interface Pending {
 /**
  * « Fait » with an « Annuler » window (PM decision 2026-11-11): the step is only sent to the server
  * once the undo delay is over. Undo therefore just forgets the click: nothing was recorded.
- * Validating another task, leaving the page or unmounting sends the pending step at once.
+ * The validated card stays on screen during the delay (PM, 2026-11-11); leaving the page or
+ * unmounting sends the pending step at once.
  */
 export function useDeferredDone(
   markDone: (offerId: number, step: Step) => Promise<DoneOutcome>,

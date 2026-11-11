@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { AbsencePanel } from "./AbsencePanel";
 import { useMiniWindow, useMiniWindowSupported } from "./MiniWindow";
-import { TaskCard, UndoButton } from "./TaskCard";
+import { TaskCard } from "./TaskCard";
 
 const keyOf = (t: TaskView) => `${t.offerId}:${t.step}`;
 
@@ -62,13 +62,15 @@ export function TasksScreen() {
 
   const payload = state.status === "ready" ? state.payload : null;
   const pendingKey = pending ? keyOf(pending) : null;
-  // The card shows the first task of the engine's list (R5); the pending one is already gone.
+  // Tasks still to do: the engine's list (R5) without the one waiting for its « Annuler » delay.
   const tasks = payload ? payload.tasks.filter((t) => keyOf(t) !== pendingKey) : [];
-  const current = tasks[0];
+  // PM 2026-11-11: while « Annuler » is possible, the validated card stays on screen; the next task
+  // only shows once the delay is over.
+  const current = pending ?? tasks[0];
   const disabled = !payload || payload.autoRunning;
 
   const validate = () => {
-    if (!current || disabled) return;
+    if (pending || !current || disabled) return;
     setFeedback(null);
     done(current);
   };
@@ -121,12 +123,12 @@ export function TasksScreen() {
   const pendingMin = pending?.duration ?? 0;
   const remainingMin = Math.max(0, payload.remaining - pendingMin);
   const usedPct = payload.budget > 0 ? Math.min(100, Math.round(((payload.consumed + pendingMin) / payload.budget) * 100)) : 100;
-  const empty = pending
-    ? { title: "C'était la dernière tâche de ta liste.", detail: "La liste se met à jour toute seule dès qu'une tâche se débloque." }
-    : emptyMessage(payload.emptyReason, payload.remaining);
-  const summary = current
-    ? `Encore ${tasks.length} tâche${tasks.length > 1 ? "s" : ""} · ${remainingMin} min de budget`
-    : `${remainingMin} min de budget`;
+  const empty = emptyMessage(payload.emptyReason, payload.remaining);
+  const summary = pending
+    ? `${tasks.length > 0 ? `Ensuite : encore ${tasks.length} tâche${tasks.length > 1 ? "s" : ""}` : "C'était la dernière tâche de ta liste"} · ${remainingMin} min de budget`
+    : current
+      ? `Encore ${tasks.length} tâche${tasks.length > 1 ? "s" : ""} · ${remainingMin} min de budget`
+      : `${remainingMin} min de budget`;
 
   const banner = payload.autoRunning && (
     <p role="status" className="rounded-md border border-warn/30 bg-warn/10 p-3 text-sm font-medium text-warn">
@@ -169,7 +171,7 @@ export function TasksScreen() {
       )}
 
       {current ? (
-        <TaskCard key={keyOf(current)} task={current} onDone={validate} disabled={disabled} />
+        <TaskCard key={keyOf(current)} task={current} onDone={validate} onUndo={pending ? undo : undefined} disabled={disabled} />
       ) : (
         <div className="rounded-xl border border-dashed border-border bg-card p-6">
           <p className="font-medium">{empty.title}</p>
@@ -177,9 +179,7 @@ export function TasksScreen() {
         </div>
       )}
 
-      {pending && <UndoButton key={keyOf(pending)} onUndo={undo} />}
-
-      {current && <p className="text-sm text-muted-foreground">{nextHint(current, tasks[1])}</p>}
+      {current && !pending && <p className="text-sm text-muted-foreground">{nextHint(current, tasks[1])}</p>}
 
       {profile !== "orchestrator" && <AbsencePanel today={payload.dayIndex} absences={payload.absences} onDeclare={declareAbsence} />}
 
@@ -187,7 +187,7 @@ export function TasksScreen() {
         <div className="grid gap-2 p-3">
           {banner}
           {current ? (
-            <TaskCard key={keyOf(current)} task={current} onDone={validate} disabled={disabled} compact />
+            <TaskCard key={keyOf(current)} task={current} onDone={validate} onUndo={pending ? undo : undefined} disabled={disabled} compact />
           ) : (
             <p className="rounded-lg border border-dashed border-border p-4 text-sm">
               <span className="font-medium">{empty.title}</span>
@@ -195,7 +195,6 @@ export function TasksScreen() {
               <span className="text-muted-foreground">{empty.detail}</span>
             </p>
           )}
-          {pending && <UndoButton key={keyOf(pending)} onUndo={undo} compact />}
           <p className="text-center text-xs text-muted-foreground">{summary}</p>
         </div>,
       )}

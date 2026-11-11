@@ -61,15 +61,20 @@ function KitRow({ field, compact }: { field: KitField; compact: boolean }) {
   );
 }
 
-/** Piste 1 + 2 — the single task card with its execution kit. `compact` is the mini-window version. */
+/**
+ * Piste 1 + 2 — the single task card with its execution kit. `compact` is the mini-window version.
+ * With `onUndo`, the task was just marked done: the card stays, « Annuler » replaces « Fait ».
+ */
 export function TaskCard({
   task,
   onDone,
+  onUndo,
   disabled,
   compact = false,
 }: {
   task: TaskView;
   onDone: () => void;
+  onUndo?: () => void;
   disabled: boolean;
   compact?: boolean;
 }) {
@@ -88,8 +93,13 @@ export function TaskCard({
           className={cn("shrink-0 rounded-xl", compact ? "size-9" : "size-13")}
         />
         <div className="grid min-w-0">
-          <span className="font-mono text-xs font-semibold text-primary">
+          <span className="flex flex-wrap items-center gap-2 font-mono text-xs font-semibold text-primary">
             {task.step} · {STEP_NAMES[task.step]}
+            {onUndo && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-ok/15 px-2 py-0.5 font-sans text-ok">
+                <Check className="size-3" aria-hidden /> Faite
+              </span>
+            )}
           </span>
           <span className={cn("truncate font-semibold", compact ? "text-base" : "text-xl")}>{task.merchantName}</span>
           {!compact && <span className="text-sm text-muted-foreground">{whyItMatters(task.step)}</span>}
@@ -114,11 +124,15 @@ export function TaskCard({
         </ul>
       )}
 
-      <Button onClick={onDone} disabled={disabled} className={cn("w-full", compact ? "h-11" : "h-13 text-base")}>
-        <Check aria-hidden />
-        {compact ? "Fait, suivante" : "Fait"}
-        <kbd className="ml-1 rounded border border-current px-1.5 font-mono text-[10px] opacity-70">Entrée</kbd>
-      </Button>
+      {onUndo ? (
+        <UndoButton onUndo={onUndo} compact={compact} />
+      ) : (
+        <Button onClick={onDone} disabled={disabled} className={cn("w-full", compact ? "h-11" : "h-13 text-base")}>
+          <Check aria-hidden />
+          {compact ? "Fait, suivante" : "Fait"}
+          <kbd className="ml-1 rounded border border-current px-1.5 font-mono text-[10px] opacity-70">Entrée</kbd>
+        </Button>
+      )}
     </div>
   );
 }
@@ -131,7 +145,7 @@ export function UndoButton({ onUndo, compact = false }: { onUndo: () => void; co
       onClick={onUndo}
       className={cn(
         "relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-lg border border-danger/40 bg-card font-semibold text-danger",
-        compact ? "h-10 text-sm" : "h-11",
+        compact ? "h-11 text-sm" : "h-13 text-base",
       )}
     >
       <span

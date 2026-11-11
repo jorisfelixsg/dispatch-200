@@ -80,21 +80,26 @@ export function useTaskList(personId: PersonId | null | undefined) {
     async (offerId: number, step: Step): Promise<DoneOutcome> => {
       if (!personId) return { ok: false, message: "Aucun profil." };
       const seq = ++sequence.current;
+      // Hidden at once, before the server answers, so the task never flashes back on screen;
+      // done (or done by someone else): never shown again, even from a stale answer.
+      const key = `${offerId}:${step}`;
+      justDone.current.set(key, Date.now() + JUST_DONE_MS);
+      setState((prev) =>
+        prev.status === "ready"
+          ? { ...prev, payload: { ...prev.payload, tasks: prev.payload.tasks.filter((t) => `${t.offerId}:${t.step}` !== key) } }
+          : prev,
+      );
       try {
         const res = await postJson<DoneResponse>("/api/tasks/done", { personId, offerId, step }, true);
-        // Done (or done by someone else): never show this task again, even from a stale answer.
-        if (res.ok || res.code === "already_done") {
-          const key = `${offerId}:${step}`;
-          justDone.current.set(key, Date.now() + JUST_DONE_MS);
-          setState((prev) =>
-            prev.status === "ready"
-              ? { ...prev, payload: { ...prev.payload, tasks: prev.payload.tasks.filter((t) => `${t.offerId}:${t.step}` !== key) } }
-              : prev,
-          );
+        if (!res.ok && res.code !== "already_done") {
+          // Refused: the task may come back with the server's list.
+          justDone.current.delete(key);
+          if (!res.payload) void refresh();
         }
         apply(seq, res.payload);
         return res.ok ? { ok: true, message: "", doneAtSim: res.doneAtSim } : { ok: false, message: res.error };
       } catch (e) {
+        justDone.current.delete(key);
         void refresh();
         return { ok: false, message: e instanceof Error ? e.message : String(e) };
       }
