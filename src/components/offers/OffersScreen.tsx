@@ -13,7 +13,6 @@ import {
   indexExecutions,
   isStepReady,
   offerPhase,
-  s5AvailableAt,
   type OfferPhase,
   type StepMap,
 } from "@/lib/engine/offerStatus";
@@ -46,7 +45,6 @@ interface Row {
   offer: Offer;
   steps: StepMap;
   phase: OfferPhase;
-  s5At: number | null;
 }
 
 /** E3 — Tracking of the 200 offers (read-only, everyone). */
@@ -70,7 +68,7 @@ export function OffersScreen() {
     const index = indexExecutions(data.data.executions);
     return data.data.offers.map((offer) => {
       const steps = index.get(offer.id) ?? {};
-      return { offer, steps, phase: offerPhase(steps, nowSim), s5At: steps.S5 ? null : s5AvailableAt(steps) };
+      return { offer, steps, phase: offerPhase(steps, nowSim) };
     });
   }, [data, nowSim]);
 
@@ -166,7 +164,6 @@ export function OffersScreen() {
                   {STEPS.map((s) => (
                     <th key={s} scope="col" className="px-3 py-2 font-medium">{s}</th>
                   ))}
-                  <th scope="col" className="px-3 py-2 font-medium">S5 possible à partir de</th>
                   <th scope="col" className="px-3 py-2 font-medium">Statut</th>
                 </tr>
               </thead>
@@ -182,9 +179,6 @@ export function OffersScreen() {
                         <StepCell steps={r.steps} step={s} nowSim={nowSim} names={names} />
                       </td>
                     ))}
-                    <td className="px-3 py-2 font-mono text-xs tabular-nums">
-                      {r.s5At !== null ? formatSimShort(r.s5At) : <span className="text-muted-foreground">—</span>}
-                    </td>
                     <td className="px-3 py-2">
                       <Badge variant={PHASE_LABEL[r.phase].variant}>{PHASE_LABEL[r.phase].label}</Badge>
                     </td>
@@ -215,11 +209,6 @@ export function OffersScreen() {
                     </div>
                   ))}
                 </dl>
-                {r.s5At !== null && (
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    S5 possible à partir de <span className="font-mono">{formatSimShort(r.s5At)}</span>
-                  </p>
-                )}
               </li>
             ))}
           </ul>
