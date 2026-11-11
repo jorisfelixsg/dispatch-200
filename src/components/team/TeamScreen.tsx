@@ -288,7 +288,7 @@ export function TeamScreen() {
       <div className="space-y-2">
         <h2 className="text-lg font-semibold">Actions appliquées</h2>
         {actions.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-border bg-card p-4 text-sm text-muted-foreground">
+          <p className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">
             Aucune action appliquée pour l&apos;instant.
           </p>
         ) : (

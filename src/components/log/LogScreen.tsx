@@ -167,7 +167,7 @@ export function LogScreen() {
           <Loader2 className="size-4 animate-spin" aria-hidden /> Chargement…
         </p>
       ) : rows.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-border bg-card p-6 text-sm text-muted-foreground">Aucun événement.</p>
+        <p className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">Aucun événement.</p>
       ) : (
         <>
           <ol className="divide-y divide-border rounded-xl border border-border bg-card">

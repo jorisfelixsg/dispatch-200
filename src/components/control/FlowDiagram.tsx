@@ -120,7 +120,10 @@ export function FlowDiagram({ payload }: { payload: ControlPayload }) {
           viewBox="0 0 1000 380"
           className="block h-auto w-full min-w-[760px]"
           role="img"
-          aria-label={`Parcours d'une offre : S1 et S2 avant S3, S2 avant S4, S3 et S4 avant S5. ${flow.ready.S3} offres attendent S3, ${flow.ready.S4} attendent S4, ${flow.ready.S5} attendent S5, ${flow.waiting24h} dans le délai de 24 h.`}
+          aria-label={`Parcours d'une offre : S1 et S2 avant S3, S2 avant S4, S3 et S4 avant S5. ${flow.ready.S3} offres attendent S3, ${flow.ready.S4} attendent S4, ${flow.ready.S5} attendent S5, ${flow.waiting24h} dans le délai de 24 h. ${controls
+            .filter((c) => c.id !== "global")
+            .map((c) => `${c.id} : ${marginPhrase(c.margin)}`)
+            .join(", ")}.${hotStep ? ` ${hotStep} : ${worst!.level === "red" ? "ça bloque ici" : "point le plus juste"}.` : ""}`}
         >
           <defs>
             <marker id="flow-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">

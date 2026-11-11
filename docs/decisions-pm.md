@@ -39,7 +39,16 @@ Suite de la critique Impeccable (27/40, deux problèmes P1). Textes et présenta
 - **Prévenir la personne** : une fois la personne choisie, « Avant d'appliquer : demander son accord à Charlie pour le J7. L'application n'envoie aucun message. »
 - **Après « Appliquer »** : une confirmation reste affichée en haut de « Que faire ? » (masquable), avec le niveau du moment expliqué en clair.
 - **« Règle le problème » devient « Comble le manque »** : le niveau peut rester orange. Le texte d'effet explique désormais le niveau d'arrivée (orange : plus rien ne manque, mais au moins un point a 1 h d'avance ou moins ; rouge : un autre point manque encore de temps).
-- **Accepté, pas encore fait** : la prévision au J22 calculée automatiquement à l'ouverture.
+- **Prévision au J22 automatique** : finalement abandonnée (PM, 2026-11-11), le bouton « Calculer » reste.
+
+## Tour de contrôle : retouches P2 (2026-11-11)
+
+Plus petit changement à chaque fois (PM : pas de sur-ingénierie).
+
+- **Contrastes** : vert `--ok` et orange `--warn` assombris (thème clair) pour passer le seuil AA sur fond blanc. Badge « Démo » de la barre du haut en 12 px au lieu de 10 px.
+- **Pointillés réservés à la démo** : retirés de « Détail des calculs » et des états vides (Mes tâches, Suivi des offres, L'organisation, Journal). Restent l'horloge simulée, l'étiquette « Démo » et l'écran Simulation.
+- **Mot « démo » hors de la démo** : la légende du rythme dit « plan calculé au début du mois ».
+- **Accessibilité** : la phrase-verdict est un titre, annoncé quand il change ; la description du schéma pour lecteur d'écran donne aussi l'avance ou le retard de chaque étape et l'étape qui bloque.
 
 ## « Mes tâches » v2 (2026-11-11)
 

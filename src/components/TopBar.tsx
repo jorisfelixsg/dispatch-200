@@ -32,7 +32,7 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
     >
       {item.label}
       {item.demo && (
-        <span className="rounded border border-dashed border-muted-foreground/50 px-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+        <span className="rounded border border-dashed border-muted-foreground/50 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
           Démo
         </span>
       )}

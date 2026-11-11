@@ -52,7 +52,7 @@ function LevelBadge({ level }: { level: Level }) {
 function CalculationDetails({ payload }: { payload: ControlPayload }) {
   const { controls } = payload;
   return (
-    <details className="group rounded-2xl border border-dashed border-border bg-card">
+    <details className="group rounded-2xl border border-border bg-card">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-2 p-4 text-sm text-muted-foreground [&::-webkit-details-marker]:hidden">
         <span>Détail des calculs : contrôles en minutes, seuils des niveaux</span>
         <ChevronRight className="size-4 transition-transform group-open:rotate-90" aria-hidden />

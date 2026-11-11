@@ -71,7 +71,7 @@ export function RhythmCard({ payload }: { payload: ControlPayload }) {
         )}
       </p>
       <p className="text-xs text-muted-foreground">
-        <span style={{ color: "var(--series-1)" }}>━</span> réel · ┅ plan calculé au démarrage de la démo
+        <span style={{ color: "var(--series-1)" }}>━</span> réel · ┅ plan calculé au début du mois
       </p>
     </section>
   );

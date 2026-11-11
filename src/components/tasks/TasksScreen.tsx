@@ -138,7 +138,7 @@ export function TasksScreen() {
       {current ? (
         <TaskCard key={keyOf(current)} task={current} onDone={validate} onUndo={pending ? undo : undefined} disabled={disabled} />
       ) : (
-        <div className="rounded-xl border border-dashed border-border bg-card p-6">
+        <div className="rounded-xl border border-border bg-card p-6">
           <p className="font-medium">{empty.title}</p>
           <p className="mt-1 text-sm text-muted-foreground">{empty.detail}</p>
         </div>

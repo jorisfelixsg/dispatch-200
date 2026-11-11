@@ -26,7 +26,9 @@ export function TowerHero({ payload }: { payload: ControlPayload }) {
     <section className={cn("grid gap-5 rounded-2xl border p-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-center", HERO[payload.level])}>
       <div className="min-w-0 space-y-2">
         <LevelPill level={payload.level} prefix="Niveau" className="bg-card px-3 py-1 text-sm" />
-        <p className="text-balance text-xl font-semibold leading-snug md:text-2xl">{v.headline}</p>
+        <h2 aria-live="polite" className="text-balance text-xl font-semibold leading-snug md:text-2xl">
+          {v.headline}
+        </h2>
         <p className="text-sm">{v.cause}</p>
       </div>
       <div className="flex flex-wrap gap-x-7 gap-y-4">

@@ -133,7 +133,7 @@ export function OffersScreen() {
       )}
 
       {data.status === "ready" && rows.length === 0 && (
-        <div className="rounded-xl border border-dashed border-border bg-card p-6 text-sm text-muted-foreground">
+        <div className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
           Aucune offre en base.{" "}
           {isOrchestrator ? (
             <>
